@@ -56,11 +56,11 @@ namespace :a01 do
 
   task :e02 => :sync do
     [
-      { cores: 2, binding: 'explicit:0,0:0,1' }, # Same socket, different cores.
-      { cores: 2, binding: 'explicit:0,0:1,0' }, # Same node, different sockets.
-      { cores: 1, binding: 'explicit:0,0' },     # Different nodes.
-    ].each do |cores:,binding:|
-      qsub 'osu.sh',
+      { cores: 2, binding: 'explicit:0,0:0,1', args: '' }, # Same socket, different cores.
+      { cores: 2, binding: 'explicit:0,0:1,0', args: '-persocket 1' }, # Same node, different sockets.
+      { cores: 1, binding: 'explicit:0,0', args: '' },     # Different nodes.
+    ].each do |cores:,binding:,args:|
+      qsub 'osu.sh', args:
            parallel_environment: "openmpi-#{cores}perhost",
            jobs: 2,
            binding: binding,
