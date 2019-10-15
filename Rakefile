@@ -1,3 +1,5 @@
+require 'shellwords'
+
 def windows?
   !(RUBY_PLATFORM !~ /cygwin|mswin|mingw|bccwin|wince|emx/)
 end
@@ -11,27 +13,59 @@ namespace :a01 do
     end
   end
 
-  task :e01 => :sync do
-    sh 'ssh', 'lcc2', <<~SH
-      cd a01 &&
-      qsub -cwd -o output.log -e error.log -pe openmpi-1perhost 8 -N hostname -sync yes hostname.sh &&
-      cat output.log || cat error.log
-      rm -f *.log
+  def qsub(executable, *args, output_file: 'output.log', error_log: 'error.log', parallel_environment:, jobs:, name: nil, sync: true, directory: nil, binding: nil)
+    qsub_args = []
+    qsub_args << '-cwd' if directory
+    qsub_args << '-o' << output_file if output_file
+    qsub_args << '-e' << error_log if error_log
+    qsub_args << '-pe' << parallel_environment << jobs
+    qsub_args << '-binding' << binding if binding
+    qsub_args << '-N' << name if name
+    qsub_args << '-sync' << 'yes' if sync
+    qsub_args << executable
+    qsub_args << '--'
+    qsub_args += args
+
+    script = <<~SH
+      set -euo pipefail
+
+      #{directory ? "cd '#{directory}'" : ''}
+
+      trap 'rm -f #{[*output_file, *error_log].shelljoin}' EXIT
+
+      if qsub #{qsub_args.shelljoin}; then
+        #{output_file ? "cat #{output_file.shellescape}" : ''}
+        exit 0
+      else
+        exit_status=$?
+        #{error_log ? "cat #{error_log.shellescape}" : ''}
+        exit $exit_status
+      fi
     SH
+
+    sh 'ssh', 'lcc2', script
+  end
+
+  task :e01 => :sync do
+    qsub 'hostname.sh',
+         parallel_environment: 'openmpi-1perhost',
+         jobs: 8,
+         name: 'hostname',
+         directory: 'a01'
   end
 
   task :e02 => :sync do
     [
-      { cores: 2, binding: '-binding explicit:0,0:0,1' }, # Same socket, different cores.
-      { cores: 2, binding: '-binding explicit:0,0:1,0' }, # Same node, different sockets.
-      { cores: 1, binding: '-binding explicit:0,0' },     # Different nodes.
+      { cores: 2, binding: 'explicit:0,0:0,1' }, # Same socket, different cores.
+      { cores: 2, binding: 'explicit:0,0:1,0' }, # Same node, different sockets.
+      { cores: 1, binding: 'explicit:0,0' },     # Different nodes.
     ].each do |cores:,binding:|
-      sh 'ssh', 'lcc2', <<~SH
-        cd a01 &&
-        qsub -cwd -o output.log -e error.log -pe openmpi-#{cores}perhost 2 #{binding} -N osu -sync yes osu.sh &&
-        cat output.log || cat error.log
-        rm -f *.log
-      SH
+      qsub 'osu.sh',
+           parallel_environment: "openmpi-#{cores}perhost",
+           jobs: 2,
+           binding: binding,
+           name: 'osu',
+           directory: 'a01'
     end
   end
 end
