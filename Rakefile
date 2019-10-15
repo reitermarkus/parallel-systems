@@ -1,6 +1,14 @@
+def windows?
+  !(RUBY_PLATFORM !~ /cygwin|mswin|mingw|bccwin|wince|emx/)
+end
+
 namespace :a01 do
   task :sync do
-    sh 'rsync', '-av', '--delete', 'a01/', 'lcc2:a01/'
+    if windows?
+      sh 'rclone', 'sync', '-v', 'a01', 'lcc2:a01/'
+    else
+      sh 'rsync', '-av', '--delete', 'a01/', 'lcc2:a01/'
+    end
   end
 
   task :e01 => :sync do
