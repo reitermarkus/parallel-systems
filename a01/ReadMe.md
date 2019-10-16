@@ -2,6 +2,8 @@
 
 ## Exercise 1
 
+To run this exercise, execute `rake a01:e01`.
+
 In my opinion, the five most important parameters when submitting a job are:
 
 - `-pe` because it is needed to set up the parallel environment
@@ -13,6 +15,8 @@ In my opinion, the five most important parameters when submitting a job are:
 To run the program in parallel, we need to set the `-pe` to `openmpi-*perhost` and use `mpiexec` to execute is.
 
 ## Exercise 2
+
+To run this exercise, execute `rake a01:e02`.
 
 ###  Latency Test
 
