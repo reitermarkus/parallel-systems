@@ -86,7 +86,7 @@ namespace :a02 do
   end
 
   task :e02 => :sync do
-    ssh <<~SH, directory: 'a02/heat_stencil_1d'
+    ssh <<~SH, directory: 'a02/e02'
       module load gcc/8.2.0
       module load openmpi/4.0.1
       make clean
