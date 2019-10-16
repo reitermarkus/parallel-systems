@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -37,9 +38,8 @@ int main(int argc, char **argv) {
   auto source_x = n / 4;
   buffer_a[source_x] = 273 + 60;
 
-  printf("Initial:\t");
   print_temperature(buffer_a, n);
-  printf("\n");
+  cout << " initial" << endl;
 
   // ---------- compute ----------
 
@@ -71,34 +71,28 @@ int main(int argc, char **argv) {
     swap(buffer_a, buffer_b);
 
     // show intermediate step
-    if (!(t % 1000)) {
-      printf("Step t=%d:\t", t);
+    if (t % 1000 == 0) {
       print_temperature(buffer_a, n);
-      printf("\n");
+      cout << " t=" << t << endl;
     }
   }
 
   // ---------- check ----------
 
-  printf("Final:\t\t");
   print_temperature(buffer_a, n);
-  printf("\n");
+  cout << " final" << endl;
 
-  auto success = true;
-  for (auto i = 0; i < n; i++) {
-    auto temp = buffer_a[i];
-    if (273 <= temp && temp <= 273 + 60)
-      continue;
-    success = false;
-    break;
+  cout << "Verification: ";
+
+  for (auto temp : buffer_a) {
+    if (temp < 273 || temp > 273 + 60) {
+      cout << "FAILED" << endl;
+      return EXIT_FAILURE;
+    }
   }
 
-  printf("Verification: %s\n", success ? "OK" : "FAILED");
-
-  // ---------- cleanup ----------
-
-  // done
-  return success ? EXIT_SUCCESS : EXIT_FAILURE;
+  cout << "OK" << endl;
+  return EXIT_SUCCESS;
 }
 
 void print_temperature(vector<double> m, unsigned long n) {
@@ -116,7 +110,7 @@ void print_temperature(vector<double> m, unsigned long n) {
 
   // room
   // left wall
-  printf("|");
+  cout << "|";
   // actual room
   for (unsigned long i = 0; i < resolution; i++) {
     // get max temperature in this tile
@@ -130,8 +124,8 @@ void print_temperature(vector<double> m, unsigned long n) {
     c = (c >= colors.length()) ? colors.length() - 1 : ((c < 0) ? 0 : c);
 
     // print the average temperature
-    printf("%c", colors[c]);
+    cout << colors[c];
   }
   // right wall
-  printf("|");
+  cout << "|";
 }
