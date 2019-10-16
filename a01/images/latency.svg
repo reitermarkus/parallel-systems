@@ -1288,7 +1288,7 @@
              x="0 5.0497198 7.5397201 12.58944 15.34836 20.398081 22.888081 27.937799 30.218639 33.236519 37.808159 42.578999 50.606758 55.527 57.777962 61.761959 67.0308 71.243881 75.775681 80.735764 84.072357 86.562363 88.863121 94.131958 96.42276 99.410759 102.40872 107.43852 110.91456 115.8348 121.10364 124.44024 126.73104 130.94412 136.19304 139.66908 144.7188 148.56335 151.07327"
              y="0"
              sodipodi:role="line"
-             id="tspan764">0,0:0,1 (Same socket, different cores.)</tspan></text>
+             id="tspan764">Same Socket, Different Cores</tspan></text>
 </g></g><path
        d="m 427.5,15.06 h 19.2"
        style="fill:none;stroke:#ed7d31;stroke-width:1.55999994;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
@@ -1311,7 +1311,7 @@
              x="0 5.0497198 7.5397201 12.58944 15.34836 20.398081 22.888081 27.937799 30.218639 33.236519 37.808159 42.578999 50.606758 55.527 57.777962 63.076679 68.34552 73.614357 78.534599 81.044518 83.295479 88.484642 90.875038 93.873001 96.870956 101.90076 105.3768 110.29704 115.56588 118.90248 121.19328 125.1474 130.30669 134.61935 139.15115 144.11124 147.44785 151.41193 153.92184"
              y="0"
              sodipodi:role="line"
-             id="tspan782">0,0:1,0 (Same node, different sockets.)</tspan></text>
+             id="tspan782">Same Node, Different Sockets</tspan></text>
 </g></g><path
        d="m 631.98,15.06 h 19.2"
        style="fill:none;stroke:#a5a5a5;stroke-width:1.55999994;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
@@ -1334,7 +1334,7 @@
              x="0 5.0497198 7.5397201 12.58944 14.87028 17.888161 24.103201 26.393999 29.382 32.489521 37.40976 40.885799 45.9156 51.074879 54.41148 56.702278 61.971119 67.23996 72.508797 77.429039 81.383163"
              y="0"
              sodipodi:role="line"
-             id="tspan800">0,0 (Different nodes)</tspan></text>
+             id="tspan800">Different Nodes</tspan></text>
 </g></g><g
        id="g804"><g
          id="g806"
