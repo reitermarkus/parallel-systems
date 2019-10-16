@@ -43,7 +43,7 @@ To run the program in parallel, we need to set the `-pe` to `openmpi-*perhost` a
 | 2097152 |                      1292.87 |                       368.71 |         1379.32 |
 | 4194304 |                      2893.50 |                      2589.14 |         2739.89 |
 
-![](images/a01_e02_latency.svg)
+![](images/latency.svg)
 
 ### Bandwidth Test
 
@@ -73,7 +73,7 @@ To run the program in parallel, we need to set the `-pe` to `openmpi-*perhost` a
 | 2097152 |                      5707.71 |                      5901.68 |         1535.17 |
 | 4194304 |                      1629.33 |                      1641.86 |         1537.56 |
 
-![](images/a01_e02_bandwith.svg)
+![](images/bandwith.svg)
 
 To verify the rank placement, we can pass the `--display-map`, `--display-allocation` to `mpiexec` which displays information about the node/socket/core a given process is running on.
 
