@@ -1,7 +1,7 @@
 CXX = mpic++
 CXX_FLAGS = -O2 -std=c++17 -Wall -Wextra -pedantic
 
-TARGETS = pi_seq
+TARGETS = pi_mpi pi_seq
 
 .PHONY: all
 all: $(TARGETS)
