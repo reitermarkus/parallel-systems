@@ -23,7 +23,6 @@ namespace :a01 do
     qsub_args << '-N' << name if name
     qsub_args << '-sync' << 'yes' if sync
     qsub_args << executable
-    qsub_args << '--'
     qsub_args += args
 
     script = <<~SH
@@ -57,8 +56,8 @@ namespace :a01 do
   task :e02 => :sync do
     [
       { cores: 2, binding: 'explicit:0,0:0,1', args: [] }, # Same socket, different cores.
-      { cores: 2, binding: 'explicit:0,0:1,0', args: %w[-npersocket 1] }, # Same node, different sockets.
-      { cores: 1, binding: 'explicit:0,0', args: [] },     # Different nodes.
+      { cores: 2, binding: 'explicit:0,0:1,4', args: %w[-npersocket 1] }, # Same node, different sockets.
+      { cores: 1, binding: 'explicit:0,0', args: [] }, # Different nodes.
     ].each do |cores:,binding:,args:|
       qsub 'osu.sh', *args,
            parallel_environment: "openmpi-#{cores}perhost",
