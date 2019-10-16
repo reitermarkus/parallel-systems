@@ -81,4 +81,4 @@ To run this exercise, execute `rake a01:e02`.
 
 To verify the rank placement, we can pass the `--display-map`, `--display-allocation` to `mpiexec` which displays information about the node/socket/core a given process is running on.
 
-The results are somewhat stable, they are whithin +/- 10% of the reference results in the tables above.
+The results are somewhat stable, they are whithin ± 10% of the reference results in the tables above.
