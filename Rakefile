@@ -56,16 +56,14 @@ namespace :a01 do
 
   task :e02 => :sync do
     [
-      { cores: 2, binding: 'explicit:0,0:0,1', args: [] }, # Same socket, different cores.
-      { cores: 2, binding: 'explicit:0,0:1,0', args: %w[-npersocket 1] }, # Same node, different sockets.
-      { cores: 1, binding: 'explicit:0,0', args: [] },     # Different nodes.
-    ].each do |cores:,binding:,args:|
-      qsub 'osu.sh', *args,
-           parallel_environment: "openmpi-#{cores}perhost",
-           jobs: 2,
-           binding: binding,
-           name: 'osu',
-           directory: 'a01'
+      { cores: 2, binding: '-binding explicit:0,0:1,0' } # Same node, different sockets.
+    ].each do |cores:,binding:|
+      sh 'ssh', 'lcc2', <<~SH
+        cd a01 &&
+        qsub -cwd -o output.log -e error.log -pe openmpi-#{cores}perhost 2 #{binding} -N osu -sync yes osu.sh &&
+        cat output.log || cat error.log
+        rm -f *.log
+      SH
     end
   end
 end
