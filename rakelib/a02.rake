@@ -8,8 +8,14 @@ namespace :a02 do
       module load gcc/8.2.0
       module load openmpi/4.0.1
       make clean
-      make run
+      make
     SH
+
+    qsub './pi_mpi.sh',
+         parallel_environment: 'openmpi-8perhost',
+         slots: 64,
+         name: 'pi',
+         directory: 'a02/e01'
   end
 
   task :e02 => :sync do

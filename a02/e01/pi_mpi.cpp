@@ -1,3 +1,6 @@
+#include <chrono>
+#include <functional>
+#include <memory>
 #include <iostream>
 #include <random>
 #include <string>
@@ -16,11 +19,13 @@ void assert_mpi(string function, int error) {
 }
 
 int main(int argc, char **argv) {
-  MPI_Init(&argc, &argv);
+  assert_mpi("MPI_Init", MPI_Init(&argc, &argv));
 
   defer _(nullptr, bind([]{
     assert_mpi("MPI_Finalize", MPI_Finalize());
   }));
+
+  auto start_time = chrono::high_resolution_clock::now();
 
   int size;
   assert_mpi("MPI_Comm_size", MPI_Comm_size(MPI_COMM_WORLD, &size));
@@ -31,7 +36,7 @@ int main(int argc, char **argv) {
   auto samples = 1000000000;
 
   if (argc > 1) {
-    samples = strtol(argv[1], NULL, 10);
+    samples = strtol(argv[1], nullptr, 10);
   }
 
   random_device rd;
@@ -47,6 +52,12 @@ int main(int argc, char **argv) {
     stop = samples;
   }
 
+  if (rank == 0) {
+    cout << "┌──────┬──────────────────────┬──────────────────────┬──────────────────────┐" << endl;
+    cout << "❘ Rank ❘                Start ❘                 Stop ❘                 Time ❘" << endl;
+    cout << "├──────┼──────────────────────┼──────────────────────┼──────────────────────┤" << endl;
+  }
+
   for (auto i = start; i < stop; i++) {
     auto x = dis(gen);
     auto y = dis(gen);
@@ -59,14 +70,24 @@ int main(int argc, char **argv) {
   if (rank == 0) {
     for (auto r = 1; r < size; r++) {
       auto other_inside = 0;
-      MPI_Recv(&other_inside, 1, MPI_INT, r, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(&other_inside, 1, MPI_LONG, r, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       inside += other_inside;
     }
+  } else {
+    MPI_Send(&inside, 1, MPI_LONG, 0, 0, MPI_COMM_WORLD);
+  }
+
+  auto end_time = chrono::high_resolution_clock::now();
+  chrono::milliseconds duration = chrono::duration_cast<chrono::milliseconds>(end_time - start_time);
+
+  printf("| %4d | %20d | %20d | %17lld ms |\n", rank, start, stop, (long long int)duration.count());
+
+  if (rank == 0) {
+    cout << "└──────┴──────────────────────┴──────────────────────┴──────────────────────┘" << endl;
+    cout << endl;
 
     double pi = (double)inside / (double)samples * 4.0;
-    cout << "π = " << pi << endl;
-  } else {
-    MPI_Send(&inside, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+    cout << "π ≈ " << pi << endl;
   }
 
   return EXIT_SUCCESS;
