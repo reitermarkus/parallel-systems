@@ -1,4 +1,14 @@
 require 'shellwords'
+require 'socket'
+
+def ping(host, timeout = 1)
+  begin
+    s = Socket.tcp(host, 22, connect_timeout: timeout)
+    s.close
+  rescue Errno::ECONNREFUSED, Errno::ETIMEDOUT
+    raise 'lcc2 not available. Check VPN connection.'
+  end
+end
 
 def windows?
   !(RUBY_PLATFORM !~ /cygwin|mswin|mingw|bccwin|wince|emx/)
@@ -50,7 +60,7 @@ def qsub(executable, *args, parallel_environment:, slots:, output_file: 'output.
 end
 
 namespace :a01 do
-  task :sync do
+  task :sync => ping('lcc2.uibk.ac.at') do
     sync 'a01'
   end
 
@@ -78,7 +88,7 @@ namespace :a01 do
 end
 
 namespace :a02 do
-  task :sync do
+  task :sync => ping('lcc2.uibk.ac.at') do
     sync 'a02'
   end
 
