@@ -15,7 +15,7 @@ Passwordless SSH access to LCC2 must be configured as `lcc2`, i.e. `ssh lcc2` sh
 Create a symlink to the scratch partition using
 
 ```
-rake symlink_scratch
+rake lcc2:symlink_scratch
 ```
 
 ### Homebrew
@@ -23,7 +23,7 @@ rake symlink_scratch
 Install using
 
 ```
-rake install_homebrew
+rake lcc2:install_homebrew
 ```
 
 and activate it with
@@ -37,7 +37,7 @@ eval $(~/.linuxbrew/bin/brew shellenv)
 Install using
 
 ```
-rake install_rust
+rake lcc2:install_rust
 ```
 
 and activate it with
@@ -51,7 +51,7 @@ source ~/.cargo/env
 Install using
 
 ```
-rake install_openmpi
+rake lcc2:install_openmpi
 ```
 
 and activate it by activating Homebrew with

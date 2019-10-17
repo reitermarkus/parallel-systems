@@ -1,14 +1,4 @@
 require 'shellwords'
-require 'socket'
-
-def ping(host, timeout = 1)
-  begin
-    s = Socket.tcp(host, 22, connect_timeout: timeout)
-    s.close
-  rescue Errno::ECONNREFUSED, Errno::ETIMEDOUT
-    raise 'lcc2 not available. Check VPN connection.'
-  end
-end
 
 def windows?
   !(RUBY_PLATFORM !~ /cygwin|mswin|mingw|bccwin|wince|emx/)

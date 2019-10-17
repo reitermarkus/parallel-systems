@@ -1,5 +1,5 @@
 namespace :a01 do
-  task :sync => ping('lcc2.uibk.ac.at') do
+  task :sync => :'lcc2:ping' do
     sync 'a01'
   end
 
