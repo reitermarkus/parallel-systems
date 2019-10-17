@@ -15,4 +15,3 @@ path = "pi_mpi.rs"
 
 [patch.crates-io]
 libffi = { git = "https://github.com/reitermarkus/libffi-rs" }
-libffi-sys = { git = "https://github.com/reitermarkus/libffi-sys-rs", branch = "cp-r" }
