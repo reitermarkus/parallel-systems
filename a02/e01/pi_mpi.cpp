@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 
   auto inside = 0;
 
-  auto chunk_size = ((samples + (size - 1)) / size);
+  auto chunk_size = (samples + (size - 1)) / size;
   auto start = chunk_size * rank;
   auto stop = start + chunk_size;
   if (stop > samples) {

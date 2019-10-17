@@ -16,9 +16,9 @@ end
 
 def sync(directory)
   if windows?
-    sh 'rclone', 'sync', '-v', "#{directory}/", "lcc2:#{directory}/"
+    sh 'rclone', 'sync', '-v', "#{directory}/", "lcc2:scratch/#{directory}/"
   else
-    sh 'rsync', '-av', '--delete', "#{directory}/", "lcc2:#{directory}/"
+    sh 'rsync', '-av', '--exclude', 'target', '--delete', "#{directory}/", "lcc2:scratch/#{directory}/"
   end
 end
 
@@ -26,7 +26,7 @@ def ssh(script, directory: nil)
   sh 'ssh', 'lcc2', <<~SH
     set -euo pipefail
 
-    #{directory ? "cd #{directory.shellescape}" : ''}
+    #{directory ? "cd scratch/#{directory.shellescape}" : ''}
 
     #{script}
   SH

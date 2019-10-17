@@ -1,0 +1,18 @@
+[package]
+name = "pi_mpi"
+version = "0.1.0"
+authors = ["Markus Reiter <me@reitermark.us>"]
+edition = "2018"
+
+[dependencies]
+mpi = { git = "https://github.com/reitermarkus/rsmpi" }
+num = "0.2.0"
+rand = "0.7.2"
+
+[[bin]]
+name = "pi_mpi"
+path = "pi_mpi.rs"
+
+[patch.crates-io]
+libffi = { git = "https://github.com/reitermarkus/libffi-rs" }
+libffi-sys = { git = "https://github.com/reitermarkus/libffi-sys-rs", branch = "cp-r" }
