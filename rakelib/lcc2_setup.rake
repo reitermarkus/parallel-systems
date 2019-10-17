@@ -1,7 +1,7 @@
 task :install_homebrew => :symlink_cache do
   ssh <<~SH
     if ! [[ -d ~/scratch/.linuxbrew ]]; then
-      git clone https://github.com/Homebrew/brew ~/scratch/.linuxbrew
+      git clone https://github.com/Homebrew/brew ~/scratch/.linuxbrew/Homebrew
     fi
 
     ln -sfn scratch/.linuxbrew ~/.linuxbrew
