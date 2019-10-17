@@ -5,14 +5,12 @@ namespace :a02 do
 
   task :e01 => :sync do
     ssh <<~SH, directory: 'a02/e01'
-      module load gcc/8.2.0
-      module load openmpi/4.0.1
-
+      #{load_env :cpp}
       make clean
       make
     SH
 
-    qsub './pi_mpi.sh',
+    qsub mpiexec('./pi_mpi', env: :cpp),
          parallel_environment: 'openmpi-8perhost',
          slots: 64,
          name: 'pi',
@@ -21,15 +19,11 @@ namespace :a02 do
 
   task :e01_rust => :sync do
     ssh <<~SH, directory: 'a02/e01'
-      set +u
-      eval $(~/.linuxbrew/bin/brew shellenv)
-      set -u
-
-      source ~/.cargo/env
+      #{load_env :rust}
       cargo build --release
     SH
 
-    qsub './pi_mpi_rust.sh',
+    qsub mpiexec('./target/release/pi_mpi', env: :rust),
          parallel_environment: 'openmpi-8perhost',
          slots: 64,
          name: 'pi',
