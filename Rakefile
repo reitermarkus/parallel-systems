@@ -47,7 +47,7 @@ def load_env(env = nil)
   end
 end
 
-def mpiexec(executable, env: nil)
+def mpiexec(executable, env:)
   <<~SH
     #!/usr/bin/env bash
     set -euo pipefail
