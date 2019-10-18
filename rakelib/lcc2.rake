@@ -52,7 +52,7 @@ namespace :lcc2 do
       eval $(~/.linuxbrew/bin/brew shellenv)
       set -u
 
-      brew install --HEAD open-mpi
+      brew install open-mpi
     SH
   end
 
