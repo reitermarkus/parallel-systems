@@ -1,3 +1,5 @@
+#include <cerrno>
+#include <cstring>
 #include <iostream>
 #include <random>
 
@@ -7,14 +9,21 @@ int main(int argc, char **argv) {
   auto samples = 1000000000;
 
   if (argc > 1) {
-    samples = strtol(argv[1], NULL, 10);
+    errno = 0;
+
+    samples = strtol(argv[1], nullptr, 10);
+
+    if (errno != 0) {
+      cerr << "Failed parsing '" << argv[1] << "' to number: " << strerror(errno) << endl;
+      exit(EXIT_FAILURE);
+    }
   }
 
   random_device rd;
   mt19937 gen(rd());
   uniform_real_distribution<> dis(-1, 1);
 
-  auto inside = 0;
+  unsigned long long inside = 0;
   double pi = 0;
 
   for (auto i = 1; i <= samples; i++) {

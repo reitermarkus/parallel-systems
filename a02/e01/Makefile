@@ -15,6 +15,6 @@ clean:
 
 .PHONY: run
 run: all
-	@for stencil in "$(TARGETS)"; do \
-	  ./$(TARGETS); \
+	for target in $(TARGETS); do \
+	  ./$${target}; \
 	done
