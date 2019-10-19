@@ -1,0 +1,5 @@
+*_mpi
+*_seq
+*.o
+
+target
