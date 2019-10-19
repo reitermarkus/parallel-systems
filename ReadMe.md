@@ -46,7 +46,7 @@ and use it in a `Makefile` with
 CXX_FLAGS += -lboost_mpi -lboost_serialization
 
 ifneq ("$(wildcard $(HOME)/.local/include)", "")
-	CXX_FLAGS += -isystem"$(HOME)/.local/include"
+	CXX_FLAGS += -I"$(HOME)/.local/include"
 endif
 
 ifneq ("$(wildcard $(HOME)/.local/lib)", "")

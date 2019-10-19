@@ -6,7 +6,12 @@
 #include <iostream>
 #include <random>
 #include <string>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <boost/mpi.hpp>
+#pragma GCC diagnostic pop
 
 using namespace std;
 

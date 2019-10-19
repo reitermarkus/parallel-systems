@@ -2,7 +2,7 @@ CXX = mpic++
 CXX_FLAGS = -O2 -std=c++17 -Wall -Wextra -pedantic -lboost_mpi -lboost_serialization
 
 ifneq ("$(wildcard $(HOME)/.local/include)", "")
-	CXX_FLAGS += -isystem"$(HOME)/.local/include"
+	CXX_FLAGS += -I"$(HOME)/.local/include"
 endif
 
 ifneq ("$(wildcard $(HOME)/.local/lib)", "")
