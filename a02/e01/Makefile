@@ -1,5 +1,13 @@
 CXX = mpic++
-CXX_FLAGS = -O2 -std=c++17 -Wall -Wextra -pedantic
+CXX_FLAGS = -O2 -std=c++17 -Wall -Wextra -pedantic -lboost_mpi -lboost_serialization
+
+ifneq ("$(wildcard $(HOME)/.local/include)", "")
+	CXX_FLAGS += -isystem"$(HOME)/.local/include"
+endif
+
+ifneq ("$(wildcard $(HOME)/.local/lib)", "")
+	CXX_FLAGS += -L"$(HOME)/.local/lib" -Wl,-rpath,"$(HOME)/.local/lib"
+endif
 
 TARGETS = pi_mpi pi_seq
 

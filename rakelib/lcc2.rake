@@ -46,6 +46,25 @@ namespace :lcc2 do
     SH
   end
 
+  task :install_boost => [:symlink_local, :symlink_scratch] do
+    ssh <<~SH
+      if ! [[ -d ~/scratch/boost ]]; then
+        mkdir -p ~/scratch/boost
+        curl -L https://dl.bintray.com/boostorg/release/1.71.0/source/boost_1_71_0.tar.bz2 | tar -xj -C ~/scratch/boost --strip 1
+      fi
+
+      cd ~/scratch/boost
+
+      #{load_env :cpp}
+
+      ./bootstrap.sh --with-libraries=mpi --prefix="${HOME}/scratch/.local" --libdir="${HOME}/scratch/.local/lib"
+
+      echo 'using mpi ;' >> project-config.jam
+
+      ./b2 install link=shared,static --user-config=user-config.jam
+    SH
+  end
+
   task :install_openmpi => :install_homebrew do
     ssh <<~SH
       set +u
@@ -67,6 +86,18 @@ namespace :lcc2 do
   task :symlink_scratch do
     ssh <<~SH
       ln -sfn "${SCRATCH}" ~/scratch
+    SH
+  end
+
+  task :symlink_local => :symlink_scratch do
+    ssh <<~SH
+      if [[ -d ~/.local ]] && ! [[ -d ~/scratch/.local ]]; then
+        mv ~/.local ~/scratch/.local
+      else
+        mkdir -p ~/scratch/.local
+      fi
+
+      ln -sfn scratch/.local ~/.local
     SH
   end
 end
