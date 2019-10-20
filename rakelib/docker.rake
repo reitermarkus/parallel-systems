@@ -6,7 +6,7 @@ namespace :docker do
     stdout, *_ = Open3.capture3('docker', 'inspect', '--format', '{{.State.Running}}', 'docker_master_1')
     container_state = stdout.chomp
 
-    if container_state == 'false'
+    if container_state == 'false' || container_state.empty?
       cd './docker' do
         sh 'sh', './cluster.sh',  'up',  'size=8'
       end
