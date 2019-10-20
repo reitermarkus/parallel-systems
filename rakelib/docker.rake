@@ -46,4 +46,10 @@ namespace :docker do
       sh 'sh', './cluster.sh',  'scale',  "size=#{ENV.fetch 'CLUSTER_SIZE', 8 }"
     end
   end
+
+  task :reload => :init_cluster do
+    cd './docker' do
+      sh 'sh', './cluster.sh',  'reload',  "size=#{ENV.fetch 'CLUSTER_SIZE', 8 }"
+    end
+  end
 end
