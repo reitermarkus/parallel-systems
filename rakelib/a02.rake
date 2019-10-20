@@ -30,6 +30,13 @@ namespace :a02 do
          directory: 'a02/e01'
   end
 
+  task :e01_docker => :'docker:copy_exercises' do
+    cd './docker' do
+        sh 'sh', './cluster.sh', 'exec', 'make -C ./a02/e01/'
+        sh 'sh', './cluster.sh', 'exec', 'mpiexec', '-n', '8', './a02/e01/pi_mpi'
+    end
+  end
+
   task :e02 => :sync do
     ssh <<~SH, directory: 'a02/e02'
       module load gcc/8.2.0
