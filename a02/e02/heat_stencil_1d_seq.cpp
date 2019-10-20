@@ -9,47 +9,51 @@ using namespace std;
 
 static const unsigned long RESOLUTION = 120;
 
-// -- vector utilities --
-
 void print_temperature(vector<double> m, unsigned long n);
 
-// -- simulation code ---
-
 int main(int argc, char **argv) {
-  // 'parsing' optional input parameter = problem size
-  auto n = 2000;
+  auto size = 2000;
+
   if (argc > 1) {
-    n = strtol(argv[1], NULL, 10);
+    errno = 0;
+
+    size = strtol(argv[1], nullptr, 10);
+
+    if (errno != 0) {
+      cerr << "Failed parsing '" << argv[1] << "' to number: " << strerror(errno) << endl;
+      exit(EXIT_FAILURE);
+    }
   }
-  auto time_steps = n * 500;
-  printf("Computing heat-distribution for room size n=%d for time_steps=%d timesteps\n", n, time_steps);
+
+  auto time_steps = size * 500;
+  printf("Computing heat-distribution for room size %d for %d timesteps\n", size, time_steps);
 
   // ---------- setup ----------
 
   // create a buffer for storing temperature fields
-  vector<double> buffer_a(n);
+  vector<double> buffer_a(size);
 
   // set up initial conditions in buffer_a
-  for (auto i = 0; i < n; i++) {
+  for (auto i = 0; i < size; i++) {
     buffer_a[i] = 273; // temperature is 0° C everywhere (273 K)
   }
 
   // and there is a heat source in one corner
-  auto source_x = n / 4;
+  auto source_x = size / 4;
   buffer_a[source_x] = 273 + 60;
 
-  print_temperature(buffer_a, n);
+  print_temperature(buffer_a, size);
   cout << " initial" << endl;
 
   // ---------- compute ----------
 
   // create a second buffer for the computation
-  vector<double> buffer_b(n);
+  vector<double> buffer_b(size);
 
   // for each time step ..
   for (auto t = 0; t < time_steps; t++) {
     // .. we propagate the temperature
-    for (auto i = 0; i < n; i++) {
+    for (auto i = 0; i < size; i++) {
       // center stays constant (the heat is still on)
       if (i == source_x) {
         buffer_b[i] = buffer_a[i];
@@ -61,7 +65,7 @@ int main(int argc, char **argv) {
 
       // get temperatures of adjacent cells
       double tl = (i != 0) ? buffer_a[i - 1] : tc;
-      double tr = (i != n - 1) ? buffer_a[i + 1] : tc;
+      double tr = (i != size - 1) ? buffer_a[i + 1] : tc;
 
       // compute new temperature at current position
       buffer_b[i] = tc + 0.2 * (tl + tr + (-2 * tc));
@@ -72,14 +76,14 @@ int main(int argc, char **argv) {
 
     // show intermediate step
     if (t % 1000 == 0) {
-      print_temperature(buffer_a, n);
+      print_temperature(buffer_a, size);
       cout << " t=" << t << endl;
     }
   }
 
   // ---------- check ----------
 
-  print_temperature(buffer_a, n);
+  print_temperature(buffer_a, size);
   cout << " final" << endl;
 
   cout << "Verification: ";
