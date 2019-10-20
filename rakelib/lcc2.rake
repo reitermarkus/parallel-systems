@@ -57,7 +57,7 @@ namespace :lcc2 do
 
       #{load_env :cpp}
 
-      ./bootstrap.sh --with-libraries=mpi --prefix="${HOME}/scratch/.local" --libdir="${HOME}/scratch/.local/lib"
+      ./bootstrap.sh --with-libraries=mpi --prefix="${HOME}/scratch/.local"
 
       echo 'using mpi ;' >> project-config.jam
 
