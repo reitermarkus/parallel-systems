@@ -97,17 +97,6 @@ down_all ()
     docker-compose down
 }
 
-up_registry ()
-{
-    printf "\\n\\n===> SPIN UP REGISTRY"
-
-    printf "\\n%s\\n" "$HEADER"
-    echo "$ docker-compose up -d registry"
-    printf "\\n"
-
-    docker-compose up -d registry
-}
-
 generate_ssh_keys ()
 {
     if [ -f ssh/id_rsa ] && [ -f ssh/id_rsa.pub ]; then
@@ -123,23 +112,6 @@ generate_ssh_keys ()
     echo "$ ssh-keygen -f ssh/id_rsa -t rsa -N ''"
     printf "\\n"
     ssh-keygen -f ssh/id_rsa -t rsa -N ''
-}
-
-build_and_push_image ()
-{
-    printf "\\n\\n===> BUILD IMAGE"
-    printf "\\n%s\\n" "$HEADER"
-    echo "$ docker build -t \"$REGISTRY_ADDR:$REGISTRY_PORT/$IMAGE_NAME\" ."
-    printf "\\n"
-    docker build -t "$REGISTRY_ADDR:$REGISTRY_PORT/$IMAGE_NAME" .
-
-    printf "\\n"
-
-    printf "\\n\\n===> PUSH IMAGE TO REGISTRY"
-    printf "\\n%s\\n" "$HEADER"
-    echo "$ docker push \"$REGISTRY_ADDR:$REGISTRY_PORT/$IMAGE_NAME\""
-    printf "\\n"
-    docker push "$REGISTRY_ADDR:$REGISTRY_PORT/$IMAGE_NAME"
 }
 
 up_master ()
@@ -323,9 +295,7 @@ done
 
 if [ $COMMAND_UP -eq 1 ]; then
     down_all
-    up_registry
     generate_ssh_keys
-    build_and_push_image
     up_master
     up_workers
 
@@ -351,7 +321,6 @@ elif [ $COMMAND_SCALE -eq 1 ]; then
 elif [ $COMMAND_RELOAD -eq 1 ]; then
     down_master
     down_workers
-    build_and_push_image
     up_master
     up_workers
 
