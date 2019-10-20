@@ -12,7 +12,7 @@ namespace :docker do
       end
 
       if container_state == 'false' || container_state.empty?
-        sh 'sh', './cluster.sh',  'up',  'size=8'
+        sh 'sh', './cluster.sh',  'up',  "size=#{ENV.fetch 'CLUSTER_SIZE', 8 }"
       end
     end
   end
