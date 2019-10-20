@@ -19,7 +19,7 @@ TARGETS ?= $(sort $(patsubst %.cpp,%,$(wildcard *_seq.cpp *_mpi.cpp)))
 all: $(TARGETS)
 
 $(TARGETS): %: %.o
-	$(CXX) $(LDFLAGS) $^ -o $@
+	$(CXX) $^ $(LDFLAGS) -o $@
 
 .PHONY: clean
 clean:
