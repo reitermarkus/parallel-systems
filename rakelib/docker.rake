@@ -6,8 +6,12 @@ namespace :docker do
     stdout, *_ = Open3.capture3('docker', 'inspect', '--format', '{{.State.Running}}', 'docker_master_1')
     container_state = stdout.chomp
 
-    if container_state == 'false' || container_state.empty?
-      cd './docker' do
+    cd './docker' do
+      unless File.directory? 'project'
+        FileUtils.mkdir_p 'project'
+      end
+
+      if container_state == 'false' || container_state.empty?
         sh 'sh', './cluster.sh',  'up',  'size=8'
       end
     end
