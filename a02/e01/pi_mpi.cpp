@@ -8,8 +8,9 @@
 #include <string>
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunknown-warning-option"
+#if !__clang__
 #pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <boost/mpi.hpp>
 #pragma GCC diagnostic pop
