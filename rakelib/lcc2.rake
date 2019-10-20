@@ -61,7 +61,7 @@ namespace :lcc2 do
 
       echo 'using mpi ;' >> project-config.jam
 
-      ./b2 install link=shared,static --user-config=user-config.jam
+      ./b2 install link=shared,static
     SH
   end
 
