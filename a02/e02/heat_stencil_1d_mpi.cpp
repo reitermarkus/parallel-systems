@@ -5,6 +5,14 @@
 #include <string>
 #include <vector>
 
+#pragma GCC diagnostic push
+#if !__clang__
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <boost/mpi.hpp>
+#pragma GCC diagnostic pop
+
 #include "../parse_ull.hpp"
 
 using namespace std;
@@ -22,6 +30,12 @@ int main(int argc, char **argv) {
 
   auto time_steps = room_size * 500;
   printf("Computing heat-distribution for room size %d for %d timesteps\n", room_size, time_steps);
+
+  mpi::environment env(argc, argv);
+
+  mpi::communicator world;
+  int size = world.size();
+  int rank = world.rank();
 
   // Create buffers for storing temperature fields and
   // initialize temperature to 0° C (273 K) everywhere.

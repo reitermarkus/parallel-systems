@@ -33,9 +33,7 @@ int main(int argc, char **argv) {
   mpi::environment env(argc, argv);
 
   mpi::communicator world;
-
   int size = world.size();
-
   int rank = world.rank();
 
   if (rank == 0) {
