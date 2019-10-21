@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include "../parse_ull.hpp"
+
 using namespace std;
 
 static const unsigned long RESOLUTION = 120;
@@ -15,66 +17,52 @@ int main(int argc, char **argv) {
   auto size = 2000;
 
   if (argc > 1) {
-    errno = 0;
-
-    size = strtol(argv[1], nullptr, 10);
-
-    if (errno != 0) {
-      cerr << "Failed parsing '" << argv[1] << "' to number: " << strerror(errno) << endl;
-      exit(EXIT_FAILURE);
-    }
+    size = parse_ull(argv[1]);
   }
 
   auto time_steps = size * 500;
   printf("Computing heat-distribution for room size %d for %d timesteps\n", size, time_steps);
 
-  // ---------- setup ----------
-
-  // create a buffer for storing temperature fields
+  // Create buffers for storing temperature fields.
   vector<double> buffer_a(size);
+  vector<double> buffer_b(size);
 
-  // set up initial conditions in buffer_a
+  // Initialize temperature to 0° C (273 K) everywhere.
   for (auto i = 0; i < size; i++) {
-    buffer_a[i] = 273; // temperature is 0° C everywhere (273 K)
+    buffer_a[i] = 273;
   }
 
-  // and there is a heat source in one corner
+  // Place a heat source in one corner.
   auto source_x = size / 4;
   buffer_a[source_x] = 273 + 60;
 
   print_temperature(buffer_a, size);
   cout << " initial" << endl;
 
-  // ---------- compute ----------
-
-  // create a second buffer for the computation
-  vector<double> buffer_b(size);
-
-  // for each time step ..
+  // Propagate the temperature in each time step.
   for (auto t = 0; t < time_steps; t++) {
-    // .. we propagate the temperature
     for (auto i = 0; i < size; i++) {
-      // center stays constant (the heat is still on)
+      // The center stays constant (the heat is still on).
       if (i == source_x) {
         buffer_b[i] = buffer_a[i];
         continue;
       }
 
-      // get temperature at current position
+      // Get temperature at current position.
       double tc = buffer_a[i];
 
-      // get temperatures of adjacent cells
+      // Get temperatures of adjacent cells.
       double tl = (i != 0) ? buffer_a[i - 1] : tc;
       double tr = (i != size - 1) ? buffer_a[i + 1] : tc;
 
-      // compute new temperature at current position
+      // Compute new temperature at current position.
       buffer_b[i] = tc + 0.2 * (tl + tr + (-2 * tc));
     }
 
-    // swap matrices (just pointers, not content)
+    // Swap matrices (just pointers, not content).
     swap(buffer_a, buffer_b);
 
-    // show intermediate step
+    // Show intermediate step.
     if (t % 1000 == 0) {
       print_temperature(buffer_a, size);
       cout << " t=" << t << endl;
