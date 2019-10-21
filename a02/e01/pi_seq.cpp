@@ -3,20 +3,15 @@
 #include <iostream>
 #include <random>
 
+#include "../parse_ull.hpp"
+
 using namespace std;
 
 int main(int argc, char **argv) {
   auto samples = 1000000000;
 
   if (argc > 1) {
-    errno = 0;
-
-    samples = strtol(argv[1], nullptr, 10);
-
-    if (errno != 0) {
-      cerr << "Failed parsing '" << argv[1] << "' to number: " << strerror(errno) << endl;
-      exit(EXIT_FAILURE);
-    }
+    samples = parse_ull(argv[1]);
   }
 
   random_device rd;

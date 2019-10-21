@@ -7,6 +7,8 @@
 #include <random>
 #include <string>
 
+#include "../parse_ull.hpp"
+
 #pragma GCC diagnostic push
 #if !__clang__
 #pragma GCC diagnostic ignored "-Wcast-function-type"
@@ -23,14 +25,7 @@ int main(int argc, char **argv) {
   auto samples = 1000000000;
 
   if (argc > 1) {
-    errno = 0;
-
-    samples = strtol(argv[1], nullptr, 10);
-
-    if (errno != 0) {
-      cerr << "Failed parsing '" << argv[1] << "' to number: " << strerror(errno) << endl;
-      exit(EXIT_FAILURE);
-    }
+    samples = parse_ull(argv[1]);
   }
 
   auto start_time = chrono::high_resolution_clock::now();
