@@ -5,3 +5,5 @@
 target
 
 docker/project
+
+chart/node_modules

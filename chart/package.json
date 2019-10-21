@@ -1,0 +1,10 @@
+{
+  "name": "chart",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "chart.js": "^2.8.0",
+    "chartjs-node-canvas": "^2.4.0"
+  }
+}
