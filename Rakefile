@@ -53,7 +53,7 @@ def mpiexec(executable, env:)
     set -euo pipefail
 
     #{load_env env}
-    mpiexec -n "${NSLOTS}" --mca btl tcp,self #{executable.shellescape} "${@}"
+    mpiexec -n "${NSLOTS}" --mca btl self,vader,tcp #{executable.shellescape} "${@}"
   SH
 end
 

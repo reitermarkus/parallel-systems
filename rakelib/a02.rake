@@ -39,10 +39,15 @@ namespace :a02 do
 
   task :e02 => :sync do
     ssh <<~SH, directory: 'a02/e02'
-      module load gcc/8.2.0
-      module load openmpi/4.0.1
+      #{load_env :cpp}
       make clean
-      make run
+      make
     SH
+
+    qsub mpiexec('./heat_stencil_1d_mpi', env: :cpp),
+         parallel_environment: 'openmpi-8perhost',
+         slots: 8,
+         name: 'heat_stencil_1d',
+         directory: 'a02/e02'
   end
 end
