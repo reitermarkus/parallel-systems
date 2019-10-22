@@ -7,12 +7,12 @@ namespace :a02 do
     ssh <<~SH, directory: 'a02/e01'
       #{load_env :cpp}
       make clean
-      make
+      make -j 8
     SH
 
     qsub mpiexec('./pi_mpi', env: :cpp),
          parallel_environment: 'openmpi-8perhost',
-         slots: 64,
+         slots: 32,
          name: 'pi',
          directory: 'a02/e01'
   end
@@ -48,7 +48,7 @@ namespace :a02 do
     ssh <<~SH, directory: 'a02/e02'
       #{load_env :cpp}
       make clean
-      make
+      make -j 8
     SH
 
     qsub mpiexec('./heat_stencil_1d_mpi', env: :cpp),

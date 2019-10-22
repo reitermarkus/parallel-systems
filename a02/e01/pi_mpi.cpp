@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
     cout << endl;
 
     double pi = (double)inside / (double)samples * 4.0;
-    cout << "π ≈ " << pi << endl;
+    printf("π ≈ %.9g", pi);
   }
 
   return EXIT_SUCCESS;
