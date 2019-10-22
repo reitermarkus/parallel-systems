@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
   }
 
   auto chunk_size = (room_size + (size - 1)) / size;
-  auto last_chunk_size = room_size - ((room_size - chunk_size) / chunk_size) * chunk_size;
+  auto last_chunk_size = room_size % chunk_size == 0 ? chunk_size : room_size % chunk_size;
   auto buffer_size = rank == size - 1 ? last_chunk_size : chunk_size;
 
   // Skip this rank if the start index is higher than the room size.
@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
       double temp_right;
 
       if (i == buffer_size - 1) {
-        if (rank == size - 1) {
+        if (rank * chunk_size + i >= room_size - 1) {
           temp_right = temp_current;
         } else {
           world.recv(rank + 1, 1, &temp_right, 1);

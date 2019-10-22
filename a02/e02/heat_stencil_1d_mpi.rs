@@ -18,7 +18,7 @@ fn main() {
   }
 
   let chunk_size: usize = (room_size + (size - 1) as usize) / size as usize;
-  let last_chunk_size: usize = room_size - ((room_size - chunk_size) / chunk_size) * chunk_size;
+  let last_chunk_size: usize = if room_size % chunk_size == 0 { chunk_size } else { room_size % chunk_size};
   let buffer_size: usize = if rank == size - 1 { last_chunk_size } else { chunk_size };
 
   // Skip this rank if the start index is higher than the room size.
@@ -75,7 +75,7 @@ fn main() {
 
       // Get temperatures from right neighbor cell.
       let temp_right = if i == buffer_size - 1 {
-        if rank as usize * chunk_size + i == room_size - 1 {
+        if rank as usize * chunk_size + i >= room_size - 1 {
           temp_current
         } else {
           let mut temp_right_buf = 0.0;
