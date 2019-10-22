@@ -22,6 +22,14 @@ For our parallelization strategy we chose to split the number of samples into eq
 | 16    | 1.000.000.000 | 3.14160268 | 5295 |
 | 16    | 2.000.000.000 | 3.14159683 | 8919 |
 
+### Results for 32 slots
+
+| Slots | Samples       | Result     | Time |
+|-------|---------------|------------|------|
+| 32    |   500.000.000 | 3.14150258 | 1354 |
+| 32    | 1.000.000.000 | 3.14156726 | 2443 |
+| 32    | 2.000.000.000 | 3.14157818 | 4585 |
+
 Our parallelization strategy implies that the total number of samples can fit in an unsigned 64-bit integer, anything larger is not supported.
 
 ## Exercise 2
