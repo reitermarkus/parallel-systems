@@ -37,6 +37,13 @@ namespace :a02 do
     end
   end
 
+  task :e02_docker => :'docker:copy_exercises' do
+    cd './docker' do
+        sh 'sh', './cluster.sh', 'exec', 'make -C ./a02/e02/'
+        sh 'sh', './cluster.sh', 'exec', 'mpiexec', '-n', '8', './a02/e02/heat_stencil_1d_mpi'
+    end
+  end
+
   task :e02 => :sync do
     ssh <<~SH, directory: 'a02/e02'
       #{load_env :cpp}
