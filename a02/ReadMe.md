@@ -36,3 +36,6 @@ Our parallelization strategy implies that the total number of samples can fit in
 
 To run this exercise, execute `rake a02:e02`.
 
+For our parallelization strategy we chose to split the room into equal chunks. For each time step, we then needed to send the first and last element to the left and right neighbor rank, respectively.
+
+Our parallelization strategy has the effect that for a small room size, the runtime actually increases when using more processes due to the send/receive overhead.
