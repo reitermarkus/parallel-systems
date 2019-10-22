@@ -4,6 +4,8 @@
 
 To run this exercise, execute `rake a02:e01`.
 
+For our parallelization strategy we chose to split the number of samples into equal chunks and then reduce the partial results by summing them up. We chose this strategy because this seems like an embarrassingly parallel problem.
+
 ### Results for 8 slots
 
 | Slots | Samples       | Result     | Time  |
