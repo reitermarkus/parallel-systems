@@ -20,6 +20,8 @@ To run this exercise, execute `rake a02:e01`.
 | 16    | 1.000.000.000 | 3.14160268 | 5295 |
 | 16    | 2.000.000.000 | 3.14159683 | 8919 |
 
+Our parallelization strategy implies that the total number of samples can fit in an unsigned 64-bit integer, anything larger is not supported.
+
 ## Exercise 2
 
 To run this exercise, execute `rake a02:e02`.
