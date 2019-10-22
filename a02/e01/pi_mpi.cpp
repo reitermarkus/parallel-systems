@@ -8,18 +8,9 @@
 #include <string>
 
 #include "../parse_ull.hpp"
-
-#pragma GCC diagnostic push
-#if !__clang__
-#pragma GCC diagnostic ignored "-Wcast-function-type"
-#endif
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#include <boost/mpi.hpp>
-#pragma GCC diagnostic pop
+#include "../boost.hpp"
 
 using namespace std;
-
-namespace mpi = boost::mpi;
 
 int main(int argc, char **argv) {
   auto samples = 1000000000;
