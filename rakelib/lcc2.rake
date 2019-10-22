@@ -1,4 +1,5 @@
 require 'socket'
+require 'open-uri'
 
 namespace :lcc2 do
   task :ping do
@@ -8,6 +9,14 @@ namespace :lcc2 do
     rescue Errno::ECONNREFUSED, Errno::ETIMEDOUT
       raise 'LCC2 not available. Check VPN connection.'
     end
+  end
+
+  task :status do
+    html = URI('http://login.lcc2.uibk.ac.at/cgi-bin/state.pl').open(&:read)
+    /(?<workload>\d+\.\d+) %.*?(?<cpus_used>\d+)\s*\/\s*(?<cpus_total>\d+)/m =~ html
+
+    puts "Workload:   #{workload.rjust(6)} %"
+    puts "Cores:     #{cpus_used.rjust(3)} / #{cpus_total.rjust(3)}"
   end
 
   task :install_homebrew => :symlink_cache do
