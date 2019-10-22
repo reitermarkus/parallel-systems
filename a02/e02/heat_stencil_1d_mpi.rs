@@ -5,14 +5,14 @@ use mpi::{collective::{CommunicatorCollectives, Root, SystemOperation}, point_to
 fn main() {
   let room_size: usize = env::args().nth(1)
     .map(|n| n.parse().expect("Failed to parse argument"))
-    .unwrap_or(120);
+    .unwrap_or(2000);
 
   let universe = mpi::initialize().expect("MPI failed to initialize");
   let world = universe.world();
   let size = world.size();
   let rank = world.rank();
 
-  let time_steps = room_size * 10;
+  let time_steps = room_size * 500;
   if rank == 0 {
     println!("Computing heat-distribution for room size {} for {} timesteps\n", room_size, time_steps);
   }
