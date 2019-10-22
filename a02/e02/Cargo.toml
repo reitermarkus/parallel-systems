@@ -1,0 +1,15 @@
+[package]
+name = "heat_stencil_1d_mpi"
+version = "0.1.0"
+authors = ["Markus Reiter <me@reitermark.us>"]
+edition = "2018"
+
+[dependencies]
+mpi = { git = "https://github.com/reitermarkus/rsmpi" }
+
+[[bin]]
+name = "heat_stencil_1d_mpi"
+path = "heat_stencil_1d_mpi.rs"
+
+[patch.crates-io]
+libffi = { git = "https://github.com/reitermarkus/libffi-rs" }

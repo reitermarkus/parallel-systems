@@ -53,8 +53,21 @@ namespace :a02 do
 
     qsub mpiexec('./heat_stencil_1d_mpi', env: :cpp),
          parallel_environment: 'openmpi-8perhost',
-         slots: 8,
+         slots: 16,
          name: 'heat_stencil_1d',
+         directory: 'a02/e02'
+  end
+
+  task :e02_rust => :sync do
+    ssh <<~SH, directory: 'a02/e02'
+      #{load_env :rust}
+      cargo build --release
+    SH
+
+    qsub mpiexec('./target/release/heat_stencil_1d_mpi', env: :rust),
+         parallel_environment: 'openmpi-8perhost',
+         slots: 16,
+         name: 'heat_stencil_1d_mpi',
          directory: 'a02/e02'
   end
 end

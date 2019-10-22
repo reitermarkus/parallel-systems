@@ -24,6 +24,11 @@ int main(int argc, char **argv) {
   auto last_chunk_size = room_size - ((room_size - chunk_size) / chunk_size) * chunk_size;
   auto buffer_size = rank == size - 1 ? last_chunk_size : chunk_size;
 
+  // Skip this rank if the start index is higher than the room size.
+  if (rank * chunk_size >= room_size) {
+    return EXIT_SUCCESS;
+  }
+
   // Create buffers for storing temperature fields and
   // initialize temperature to 0° C (273 K) everywhere.
   vector<double> buffer_a(buffer_size, 273);
@@ -99,7 +104,15 @@ int main(int argc, char **argv) {
     buffer_a.resize(room_size);
 
     for (auto i = 1; i < size; i++) {
-      world.recv(i, 3, &buffer_a[0] + chunk_size * i, i == size - 1 ? last_chunk_size : chunk_size);
+      auto start = chunk_size * i;
+      auto count = i == size - 1 ? last_chunk_size : chunk_size;
+
+      // Break if we already received the whole room.
+      if (start >= room_size) {
+        break;
+      }
+
+      world.recv(i, 3, &buffer_a[0] + start, count);
     }
   } else {
     world.send(0, 3, &buffer_a[0], buffer_size);
