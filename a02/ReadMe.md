@@ -30,9 +30,25 @@ For our parallelization strategy we chose to split the number of samples into eq
 | 32    | 1.000.000.000 | 3.14156726 | 2443 |
 | 32    | 2.000.000.000 | 3.14157818 | 4585 |
 
+![](images/pi.svg)
+
 Our parallelization strategy implies that the total number of samples can fit in an unsigned 64-bit integer, anything larger is not supported.
 
 ## Exercise 2
+
+| Slots | Room Size     | Time       |
+|-------|---------------|------------|
+| 4     | 500           | 7003       |
+| 4     | 1000          | 12861      |
+| 4     | 2000          | 25470      |
+| 8     | 500           | 1541       |
+| 8     | 1000          | 2759       |
+| 8     | 2000          | 5874       |
+| 16    | 500           | 51003      |
+| 16    | 1000          | 98975      |
+| 16    | 2000          | 121521     |
+
+![](images/stencil.svg)
 
 To run this exercise, execute `rake a02:e02`.
 
