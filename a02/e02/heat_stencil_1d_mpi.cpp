@@ -1,4 +1,5 @@
 #include "heat_stencil.hpp"
+#include <chrono>
 #include "../boost.hpp"
 
 int main(int argc, char **argv) {
@@ -7,6 +8,8 @@ int main(int argc, char **argv) {
   if (argc > 1) {
     room_size = parse_ull(argv[1]);
   }
+
+  auto start_time = chrono::high_resolution_clock::now();
 
   mpi::environment env(argc, argv);
   mpi::communicator world;
@@ -117,6 +120,12 @@ int main(int argc, char **argv) {
   } else {
     world.send(0, 3, &buffer_a[0], buffer_size);
   }
+
+  auto end_time = chrono::high_resolution_clock::now();
+  chrono::milliseconds duration = chrono::duration_cast<chrono::milliseconds>(end_time - start_time);
+
+  if (rank == 0)
+    printf("Duration: %17lld ms\n", (long long int)duration.count());
 
   // ---------- check ----------
 
