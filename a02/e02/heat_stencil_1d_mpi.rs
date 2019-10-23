@@ -1,11 +1,13 @@
-use std::{env, io::{stdout, Write}, mem, time::Instant};
+use std::{env, mem, process::exit, time::Instant};
 
-use mpi::{collective::{CommunicatorCollectives, Root, SystemOperation}, point_to_point::{Destination, Source}, request::WaitGuard, topology::Communicator};
+use mpi::{point_to_point::{Destination, Source}, request::WaitGuard, topology::Communicator};
 
 fn main() {
   let room_size: usize = env::args().nth(1)
     .map(|n| n.parse().expect("Failed to parse argument"))
     .unwrap_or(2000);
+
+  let start_time = Instant::now();
 
   let universe = mpi::initialize().expect("MPI failed to initialize");
   let world = universe.world();
@@ -108,14 +110,26 @@ fn main() {
     }
   } else {
     world.process_at_rank(0).send_with_tag(&buffer_a[..], 3);
+    return;
   }
 
-  if rank > 0 {
-    return
-  }
+  let duration = start_time.elapsed().as_millis();
 
   print_temperature(&buffer_a);
   println!(" final");
+
+  println!("Completed in {}", duration);
+
+  print!("Verification: ");
+
+  for temp in buffer_a.into_iter() {
+    if temp < 273.0 || temp > 273.0 + 60.0 {
+      println!("FAILED");
+      exit(1);
+    }
+  }
+
+  println!("OK");
 }
 
 fn print_temperature(temperatures: &[f64]) {
