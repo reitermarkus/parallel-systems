@@ -118,7 +118,7 @@ fn main() {
   print_temperature(&buffer_a);
   println!(" final");
 
-  println!("Completed in {}", duration);
+  println!("Duration: {} ms", duration);
 
   print!("Verification: ");
 

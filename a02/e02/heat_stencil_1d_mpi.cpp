@@ -119,22 +119,16 @@ int main(int argc, char **argv) {
     }
   } else {
     world.send(0, 3, &buffer_a[0], buffer_size);
+    return EXIT_SUCCESS;
   }
 
   auto end_time = chrono::high_resolution_clock::now();
   chrono::milliseconds duration = chrono::duration_cast<chrono::milliseconds>(end_time - start_time);
 
-  if (rank == 0)
-    printf("Duration: %17lld ms\n", (long long int)duration.count());
-
-  // ---------- check ----------
-
-  if (rank > 0) {
-    return EXIT_SUCCESS;
-  }
-
   print_temperature(buffer_a, room_size);
   cout << " final" << endl;
+
+  printf("Duration: %17lld ms\n", (long long int)duration.count());
 
   cout << "Verification: ";
 
