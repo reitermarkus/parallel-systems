@@ -1,6 +1,6 @@
-#include "heat_stencil.hpp"
 #include <chrono>
-#include "../boost.hpp"
+#include "heat_stencil.hpp"
+#include "../../shared/boost.hpp"
 
 int main(int argc, char **argv) {
   auto room_size = 2000;

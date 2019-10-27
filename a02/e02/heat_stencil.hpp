@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "../parse_ull.hpp"
+#include "../../shared/parse_ull.hpp"
 
 using namespace std;
 
@@ -30,12 +30,10 @@ inline void print_temperature(const vector<double>& m, unsigned long n) {
   // left wall
   cout << "|";
   // actual room
-  for (unsigned long i = 0; i < resolution; i++)
-  {
+  for (unsigned long i = 0; i < resolution; i++) {
     // get max temperature in this tile
     double max_temp = 0;
-    for (auto x = step_size * i; x < step_size * i + step_size; x++)
-    {
+    for (auto x = step_size * i; x < step_size * i + step_size; x++) {
       max_temp = max_temp < m[x] ? m[x] : max_temp;
     }
 

@@ -7,8 +7,8 @@
 #include <random>
 #include <string>
 
-#include "../parse_ull.hpp"
-#include "../boost.hpp"
+#include "../../shared/parse_ull.hpp"
+#include "../../shared/boost.hpp"
 
 using namespace std;
 
