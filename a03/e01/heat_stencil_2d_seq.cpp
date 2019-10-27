@@ -1,4 +1,4 @@
-#include "heat_stencil.hpp"
+#include "../../shared/heat_stencil.hpp"
 
 int main(int argc, char **argv) {
   auto room_size = 500;

@@ -1,4 +1,4 @@
-#include "heat_stencil.hpp"
+#include "../../shared/heat_stencil.hpp"
 
 int main(int argc, char **argv) {
   auto room_size = 20;
@@ -58,17 +58,10 @@ int main(int argc, char **argv) {
     swap(buffer_a, buffer_b);
   }
 
-  for (auto i = 0; i < room_size; i++) {
-    for (auto k = 0; k < room_size; k++) {
-      for (auto j = 0; j < room_size; j++) {
-        auto temp = buffer_a[i * k * room_size + j];
-        if (temp < 273 || temp > 273 + 60) {
-          cout << "failed at i: " << i << " " << temp << endl;
-          cout << "failed at j: " << j << " " << temp << endl;
-          cout << "Verification: FAILED" << endl;
-          return EXIT_FAILURE;
-        }
-      }
+  for (auto temp: buffer_a) {
+    if (temp < 273 || temp > 273 + 60) {
+      cout << "Verification: FAILED" << endl;
+      return EXIT_FAILURE;
     }
   }
 

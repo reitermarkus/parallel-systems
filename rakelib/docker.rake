@@ -19,8 +19,12 @@ namespace :docker do
 
   task :copy_exercises => :init_cluster do
     Dir['./a*'].each { |d|
+      puts "Copying #{d}"
       FileUtils.copy_entry "#{d}", "./docker/project/#{d}"
     }
+
+    puts 'Copying ./shared'
+    FileUtils.copy_entry './shared', './docker/project/./shared'
   end
 
   task :exec, [:cmd] => :init_cluster do |_, args|
