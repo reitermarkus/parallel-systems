@@ -13,7 +13,7 @@ using namespace std;
 
 static const unsigned long RESOLUTION = 120;
 
-inline void print_temperature(const vector<float>& mat, unsigned long m, unsigned long n) {
+inline void print_temperature(const vector<vector<float>>& mat, unsigned long m, unsigned long n) {
   const string colors(" .-:=+*^X#%@");
 
   const int num_colors = 10;
@@ -45,9 +45,9 @@ inline void print_temperature(const vector<float>& mat, unsigned long m, unsigne
     for (size_t j = 0; j < w; j++) {
       // get max temperature in this tile
       float max_t = 0;
-      for (size_t x = sh * i; x < sh * i + sh; x++) {
-        for (size_t y = sw * j; y < sw * j + sw; y++) {
-          max_t = (max_t < mat[x * m + y]) ? mat[x * m + y] : max_t;
+      for (size_t y = sh * i; y < sh * i + sh; y++) {
+        for (size_t x = sw * j; x < sw * j + sw; x++) {
+          max_t = (max_t < mat[y][x]) ? mat[y][x] : max_t;
         }
       }
 

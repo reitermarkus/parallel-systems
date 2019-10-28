@@ -13,14 +13,14 @@ int main(int argc, char **argv) {
 
   // Create buffers for storing temperature fields and
   // initialize temperature to 0° C (273 K) everywhere.
-  vector<float> buffer_a(room_size * room_size, 273);
-  vector<float> buffer_b(room_size * room_size);
+  vector<vector<float>> buffer_a(room_size, vector<float>(room_size, 273.0));
+  vector<vector<float>> buffer_b(room_size, vector<float>(room_size));
 
   // Place a heat source in one corner.
   auto source_x = room_size / 4;
   auto source_y = room_size / 4;
 
-  buffer_a[source_x * room_size + source_y] = 273 + 60;
+  buffer_a[source_y][source_x] = 273.0 + 60.0;
 
   cout << " initial" << endl;
   print_temperature(buffer_a, room_size, room_size);
@@ -30,22 +30,22 @@ int main(int argc, char **argv) {
     for (long long i = 0; i < room_size; i++) {
       for (long long j = 0; j < room_size; j++) {
         // The center stays constant (the heat is still on).
-        if (i == source_x && j == source_y) {
-          buffer_b[i * room_size + j] = buffer_a[i * room_size + j];
+        if (i == source_y && j == source_x) {
+          buffer_b[i][j] = buffer_a[i][j];
           continue;
         }
 
         // Get temperature at current position.
-        float temp_current = buffer_a[i * room_size + j];
+        float temp_current = buffer_a[i][j];
 
         // Get temperatures of adjacent cells.
-        float temp_left = (j != 0) ? buffer_a[i * room_size + (j - 1)] : temp_current;
-        float temp_right = (j != room_size - 1) ? buffer_a[i * room_size + (j + 1)] : temp_current;
-        float temp_up = (i != 0) ? buffer_a[(i - 1) * room_size + j] : temp_current;
-        float temp_down = (i != room_size - 1) ? buffer_a[(i + 1) * room_size + j] : temp_current;
+        float temp_left = (j != 0) ? buffer_a[i][j - 1] : temp_current;
+        float temp_right = (j != room_size - 1) ? buffer_a[i][j + 1] : temp_current;
+        float temp_up = (i != 0) ? buffer_a[i - 1][j] : temp_current;
+        float temp_down = (i != room_size - 1) ? buffer_a[i + 1][j] : temp_current;
 
         // Compute new temperature at current position.
-        buffer_b[i * room_size + j] = temp_current + 0.2 * (temp_left + temp_right + temp_up + temp_down + (-4 * temp_current));
+        buffer_b[i][j] = temp_current + 0.1 * (temp_left + temp_right + temp_up + temp_down + (-4 * temp_current));
       }
     }
 
@@ -64,8 +64,8 @@ int main(int argc, char **argv) {
 
   for (auto i = 0; i < room_size; i++) {
     for (auto j = 0; j < room_size; j++) {
-      auto temp = buffer_a[i * room_size + j];
-      if (temp < 273 || temp > 273 + 60) {
+      auto temp = buffer_a[i][j];
+      if (temp < 273.0 || temp > 273.0 + 60.0) {
         cout << "failed at i: " << i << " " << temp << endl;
         cout << "failed at j: " << j << " " << temp << endl;
         cout << "Verification: FAILED" << endl;
