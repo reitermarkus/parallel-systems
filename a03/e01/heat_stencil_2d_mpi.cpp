@@ -33,7 +33,7 @@ std::ostream& operator<< (std::ostream& out, const std::vector<T>& v) {
 }
 
 int main(int argc, char **argv) {
-  auto room_size = 500;
+  size_t room_size = 500;
 
   if (argc > 1) {
     room_size = parse_ull(argv[1]);
@@ -42,10 +42,10 @@ int main(int argc, char **argv) {
   mpi::environment env(argc, argv);
   mpi::communicator world;
 
-  int size = world.size();
-  int rank = world.rank();
+  size_t size = world.size();
+  size_t rank = world.rank();
 
-  unsigned long long dim = floor(sqrt(static_cast<float>(size)));
+  size_t dim = floor(sqrt(static_cast<float>(size)));
 
   vector<mpi::cartesian_dimension> dimensions = {
     mpi::cartesian_dimension(dim),
@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
 
   mpi::cartesian_topology topology(dimensions);
 
-  auto max_rank = reduce(topology.begin(), topology.end(), 1, [&] (int acc, mpi::cartesian_dimension elem) {
+  size_t max_rank = reduce(topology.begin(), topology.end(), 1, [&] (size_t acc, mpi::cartesian_dimension elem) {
     return acc * elem.size;
   });
 
@@ -67,18 +67,23 @@ int main(int argc, char **argv) {
   auto source_x = room_size / 4;
   auto source_y = room_size / 4;
 
-  auto chunk_size = room_size / dim;
+  auto chunk_size = (room_size + dim - 1) / dim;
 
-  size_t width = room_size / dim + 2;
-  size_t height = room_size / dim + 2;
+  auto global_column = [&](size_t rank, size_t j) {
+    return (rank % dim) * chunk_size + j - 1;
+  };
 
-  vector<vector<float>> buffer_a(height, vector<float>(width, 273));
-  vector<vector<float>> buffer_b(height, vector<float>(width));
+  auto global_row = [&](size_t rank, size_t i) {
+    return (rank / dim) * chunk_size + i - 1;
+  };
+
+  vector<vector<float>> buffer_a(chunk_size + 2, vector<float>(chunk_size + 2, 273));
+  vector<vector<float>> buffer_b(chunk_size + 2, vector<float>(chunk_size + 2));
 
   size_t source_rank = (source_y / chunk_size) * dim + (source_x / chunk_size);
 
-  auto chunk_source_y = source_y % chunk_size;
-  auto chunk_source_x = source_x % chunk_size;
+  auto chunk_source_y = source_y % chunk_size + 1;
+  auto chunk_source_x = source_x % chunk_size + 1;
 
   if (rank == source_rank) {
     buffer_a[chunk_source_y][chunk_source_x] += 60;
@@ -89,13 +94,13 @@ int main(int argc, char **argv) {
   auto [left_source, right_dest] = cart_comm.shifted_ranks(1, 1);
   auto [right_source, left_dest] = cart_comm.shifted_ranks(1, -1);
 
-  auto time_steps = room_size * 500;
+  size_t time_steps = room_size * 500;
 
   if (rank == 0) {
     cout << "Computing heat-distribution for room size " << room_size << " for " << time_steps << " timestaps\n";
   }
 
-  for (auto t = 0; t < time_steps; t++) {
+  for (size_t t = 0; t < time_steps; t++) {
     // Send first column to left neighbor.
     if (left_dest >= 0) {
       column left_column(buffer_a, 1);
@@ -104,13 +109,13 @@ int main(int argc, char **argv) {
 
     // Receive last column from right neighbor.
     if (right_source >= 0) {
-      column right_column(buffer_a, width - 1);
+      column right_column(buffer_a, chunk_size + 1);
       cart_comm.recv(right_source, 1, right_column);
     }
 
     // Send last column to right neighbor.
     if (right_dest >= 0) {
-      column right_column(buffer_a, width - 2);
+      column right_column(buffer_a, chunk_size);
       cart_comm.isend(right_dest, 2, right_column);
     }
 
@@ -127,12 +132,12 @@ int main(int argc, char **argv) {
 
     // Receive last row from bottom neighbor.
     if (down_source >= 0) {
-      cart_comm.recv(down_source, 3, buffer_a[height - 1]);
+      cart_comm.recv(down_source, 3, buffer_a[chunk_size + 1]);
     }
 
     // Send last row to bottom neighbor.
     if (down_dest >= 0) {
-      cart_comm.isend(down_dest, 4, buffer_a[height - 2]);
+      cart_comm.isend(down_dest, 4, buffer_a[chunk_size]);
     }
 
     // Receive top row from top neighbor.
@@ -140,11 +145,18 @@ int main(int argc, char **argv) {
       cart_comm.recv(up_source, 4, buffer_a[0]);
     }
 
-    for (auto i = 1; i < chunk_size + 1; i++) {
-      for (auto j = 1; j < chunk_size + 1; j++) {
+    for (size_t i = 1; i < chunk_size + 1; i++) {
+      for (size_t j = 1; j < chunk_size + 1; j++) {
         // The center stays constant (the heat is still on).
         if (rank == source_rank && (i == chunk_source_y && j == chunk_source_x)) {
           buffer_b[i][j] = buffer_a[i][j];
+          continue;
+        }
+
+        auto gi = global_row(rank, i);
+        auto gj = global_column(rank, j);
+
+        if (gi >= room_size || gj >= room_size) {
           continue;
         }
 
@@ -152,9 +164,9 @@ int main(int argc, char **argv) {
         float temp_current = buffer_a[i][j];
 
         bool first_column = rank % dim == 0 && j == 1;
-        bool last_column = rank % dim == dim - 1 && j == chunk_size;
+        bool last_column = gj == room_size - 1;
         bool first_row = rank < dim && i == 1;
-        bool last_row = rank >= (dim - 1) * dim && i == chunk_size;
+        bool last_row = gi == room_size - 1;
 
         // Get temperatures of adjacent cells.
         float temp_left = first_column ? temp_current : buffer_a[i][j - 1];
@@ -173,38 +185,37 @@ int main(int argc, char **argv) {
 
   vector<float> buffer_a_flat(begin(buffer_a[0]), end(buffer_a[0]));
 
-  for (auto i = 1; i < buffer_a.size(); i++) {
+  for (size_t i = 1; i < buffer_a.size(); i++) {
     buffer_a_flat.insert(end(buffer_a_flat), begin(buffer_a[i]), end(buffer_a[i]));
   }
 
   if (rank == 0) {
     vector<vector<float>> buffer_c(room_size, vector<float>(room_size, 0));
 
-
-    for (auto r = 0; r < max_rank; r++) {
+    for (size_t r = 0; r < max_rank; r++) {
       if (r > 0) {
         world.recv(r, 5, buffer_a_flat);
 
-        for (size_t i = 0; i < height; i++) {
-          buffer_a[i] = vector<float>(&buffer_a_flat[i * width], &buffer_a_flat[(i + 1) * width]);
+        for (size_t i = 0; i < chunk_size + 2; i++) {
+          buffer_a[i] = vector<float>(&buffer_a_flat[i * (chunk_size + 2)], &buffer_a_flat[(i + 1) * (chunk_size + 2)]);
         }
       }
 
-      for (size_t i = 1; i < height; i++) {
-        for (size_t j = 1; j < width; j++) {
-          auto i2 = (r / dim) * chunk_size + (i - 1);
-          auto j2 = (r % dim) * chunk_size + (j - 1);
-          buffer_c[i2][j2] = buffer_a[i][j];
+      for (size_t i = 1; i < chunk_size + 2; i++) {
+        for (size_t j = 1; j < chunk_size + 2; j++) {
+          auto gi = global_row(r, i);
+          auto gj = global_column(r, j);
+
+          if (gi >= room_size || gj >= room_size) {
+            continue;
+          }
+
+          buffer_c[gi][gj] = buffer_a[i][j];
         }
       }
     }
 
     print_temperature(buffer_c, room_size, room_size);
-
-    cout << "dim: " << dim << endl;
-    cout << "chunk_size: " << chunk_size << endl;
-    cout << "height: " << height << endl;
-    cout << "width: " << width << endl;
 
     for (size_t i = 0; i < room_size; i++) {
       for (size_t j = 0; i < room_size; i++) {
@@ -216,10 +227,11 @@ int main(int argc, char **argv) {
         }
       }
     }
+
+    cout << "Verification: OK" << endl;
   } else {
     world.send(0, 5, buffer_a_flat);
   }
 
-  cout << "Verification: OK" << endl;
   return EXIT_SUCCESS;
 }
