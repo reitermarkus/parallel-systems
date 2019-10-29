@@ -11,7 +11,6 @@ class column {
   template<class Archive>
   void serialize(Archive& ar, const unsigned int version) {
     ar & n_rows;
-    ar & col;
 
     for (size_t i = 0; i < n_rows; i++) {
       ar & matrix[i][col];
