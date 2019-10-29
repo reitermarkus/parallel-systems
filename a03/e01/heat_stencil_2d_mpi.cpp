@@ -22,6 +22,16 @@ class column {
       : matrix(_matrix), n_rows(_matrix.size()), col(_col) {}
 };
 
+template <typename T>
+std::ostream& operator<< (std::ostream& out, const std::vector<T>& v) {
+  out << '[';
+  if (!v.empty()) {
+    std::copy (v.begin(), v.end(), std::ostream_iterator<T>(out, ", "));
+  }
+  out << "\b\b]";
+  return out;
+}
+
 int main(int argc, char **argv) {
   auto room_size = 500;
 
@@ -57,9 +67,7 @@ int main(int argc, char **argv) {
   auto source_x = room_size / 4;
   auto source_y = room_size / 4;
 
-  // 0 1 2
-  // 3 4 5
-  // 6 7 8
+  auto chunk_size = room_size / dim;
 
   size_t width = room_size / dim + 2;
   size_t height = room_size / dim + 2;
@@ -67,12 +75,10 @@ int main(int argc, char **argv) {
   vector<vector<float>> buffer_a(height, vector<float>(width, 273));
   vector<vector<float>> buffer_b(height, vector<float>(width));
 
-  auto chunk_size = (room_size / dim);
-
   size_t source_rank = (source_y / chunk_size) * dim + (source_x / chunk_size);
 
-  auto chunk_source_y = source_y % chunk_size + 1;
-  auto chunk_source_x = source_x % chunk_size + 1;
+  auto chunk_source_y = source_y % chunk_size;
+  auto chunk_source_x = source_x % chunk_size;
 
   if (rank == source_rank) {
     buffer_a[chunk_source_y][chunk_source_x] += 60;
@@ -83,7 +89,7 @@ int main(int argc, char **argv) {
   auto [left_source, right_dest] = cart_comm.shifted_ranks(1, 1);
   auto [right_source, left_dest] = cart_comm.shifted_ranks(1, -1);
 
-  auto time_steps = room_size * 100;
+  auto time_steps = room_size * 500;
 
   if (rank == 0) {
     cout << "Computing heat-distribution for room size " << room_size << " for " << time_steps << " timestaps\n";
@@ -145,11 +151,16 @@ int main(int argc, char **argv) {
         // Get temperature at current position.
         float temp_current = buffer_a[i][j];
 
+        bool first_column = rank % dim == 0 && j == 1;
+        bool last_column = rank % dim == dim - 1 && j == chunk_size;
+        bool first_row = rank < dim && i == 1;
+        bool last_row = rank >= (dim - 1) * dim && i == chunk_size;
+
         // Get temperatures of adjacent cells.
-        float temp_left = (j != 0) ? buffer_a[i][j - 1] : temp_current;
-        float temp_right = (j != room_size - 1) ? buffer_a[i][j + 1] : temp_current;
-        float temp_up = (i != 0) ? buffer_a[i - 1][j] : temp_current;
-        float temp_down = (i != room_size - 1) ? buffer_a[i + 1][j] : temp_current;
+        float temp_left = first_column ? temp_current : buffer_a[i][j - 1];
+        float temp_right = last_column ? temp_current : buffer_a[i][j + 1];
+        float temp_up = first_row ? temp_current : buffer_a[i - 1][j];
+        float temp_down = last_row ? temp_current : buffer_a[i + 1][j];
 
         // Compute new temperature at current position.
         buffer_b[i][j] = temp_current + 0.2 * (temp_left + temp_right + temp_up + temp_down + (-4 * temp_current));
@@ -167,7 +178,8 @@ int main(int argc, char **argv) {
   }
 
   if (rank == 0) {
-    vector<vector<float>> buffer_c(room_size, vector<float>(room_size));
+    vector<vector<float>> buffer_c(room_size, vector<float>(room_size, 0));
+
 
     for (auto r = 0; r < max_rank; r++) {
       if (r > 0) {
@@ -176,54 +188,38 @@ int main(int argc, char **argv) {
         for (size_t i = 0; i < height; i++) {
           buffer_a[i] = vector<float>(&buffer_a_flat[i * width], &buffer_a_flat[(i + 1) * width]);
         }
-
-        cout << "Received buffer from rank " << r << endl;
       }
 
-      for (size_t i = 1; i < chunk_size + 1; i++) {
-        for (size_t j = 1; j < chunk_size + 1; j++) {
-          buffer_c[r / dim + (i - 1)][(r % dim) * dim + (j - 1)] = buffer_a[i][j];
+      for (size_t i = 1; i < height; i++) {
+        for (size_t j = 1; j < width; j++) {
+          auto i2 = (r / dim) * chunk_size + (i - 1);
+          auto j2 = (r % dim) * chunk_size + (j - 1);
+          buffer_c[i2][j2] = buffer_a[i][j];
         }
       }
     }
 
     print_temperature(buffer_c, room_size, room_size);
-  } else {
-  /*
-  vector<float> buffer_a_flat(buffer_a.size() * buffer_a[0].size());
 
-    for (auto i = 0; i < height; i++) {
-      for (auto j = 0; j < width; j++) {
-        buffer_a_flat[i * width + j] = buffer_a[i][j];
+    cout << "dim: " << dim << endl;
+    cout << "chunk_size: " << chunk_size << endl;
+    cout << "height: " << height << endl;
+    cout << "width: " << width << endl;
+
+    for (size_t i = 0; i < room_size; i++) {
+      for (size_t j = 0; i < room_size; i++) {
+        auto temp = buffer_c[i][j];
+        if (temp < 273.0 || temp > 273.0 + 60.0) {
+          cout << "wrong temperature at " << i << ", " << j << ": " << temp << endl;
+          cout << "Verification: FAILED" << endl;
+          return EXIT_FAILURE;
+        }
       }
     }
-*/
+  } else {
     world.send(0, 5, buffer_a_flat);
   }
 
-
-  return 0;
-
-  /*
-
-  cout << " final" << endl;
-  print_temperature(buffer_a, room_size, room_size);
-
-  for (auto i = 0; i < room_size; i++) {
-    for (auto j = 0; j < room_size; j++) {
-      auto temp = buffer_a[i][j];
-      if (temp < 273.0 || temp > 273.0 + 60.0) {
-        cout << "failed at i: " << i << " " << temp << endl;
-        cout << "failed at j: " << j << " " << temp << endl;
-        cout << "Verification: FAILED" << endl;
-        return EXIT_FAILURE;
-      }
-    }
-  }
-
   cout << "Verification: OK" << endl;
-
   return EXIT_SUCCESS;
-
-  */
 }
