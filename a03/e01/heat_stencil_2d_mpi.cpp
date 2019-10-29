@@ -54,12 +54,11 @@ int main(int argc, char **argv) {
     return EXIT_SUCCESS;
   }
 
-  auto source_x = room_size - 1;
-  auto source_y = room_size - 1;
-
+  auto source_x = room_size / 4;
+  auto source_y = room_size / 4;
 
   // 0 1 2
-  // 3 4 5 
+  // 3 4 5
   // 6 7 8
 
   size_t width = room_size / dim + 2;
@@ -72,8 +71,11 @@ int main(int argc, char **argv) {
 
   size_t source_rank = (source_y / chunk_size) * dim + (source_x / chunk_size);
 
+  auto chunk_source_y = source_y % chunk_size + 1;
+  auto chunk_source_x = source_x % chunk_size + 1;
+
   if (rank == source_rank) {
-    buffer_a[source_y % chunk_size + 1][source_x % chunk_size + 1] += 60;
+    buffer_a[chunk_source_y][chunk_source_x] += 60;
   }
 
   auto [up_source, down_dest] = cart_comm.shifted_ranks(0, 1);
@@ -134,8 +136,8 @@ int main(int argc, char **argv) {
 
     for (auto i = 1; i < chunk_size + 1; i++) {
       for (auto j = 1; j < chunk_size + 1; j++) {
-        if (rank == source_rank && (i == source_y % chunk_size && j == source_x % chunk_size)) {
-          // The center stays constant (the heat is still on).
+        // The center stays constant (the heat is still on).
+        if (rank == source_rank && (i == chunk_source_y && j == chunk_source_x)) {
           buffer_b[i][j] = buffer_a[i][j];
           continue;
         }
@@ -172,15 +174,15 @@ int main(int argc, char **argv) {
         world.recv(r, 5, buffer_a_flat);
 
         for (size_t i = 0; i < height; i++) {
-          buffer_a[i] = vector<float>(&buffer_a_flat[i * width], &buffer_a_flat[i * width + width - 1]);
+          buffer_a[i] = vector<float>(&buffer_a_flat[i * width], &buffer_a_flat[(i + 1) * width]);
         }
 
         cout << "Received buffer from rank " << r << endl;
       }
-      
-      for (size_t i = 1; i < chunk_size; i++) {
-        for (size_t j = 1; j < chunk_size; j++) {
-          buffer_c[r / dim + (i - 1)][r % dim + (j - 1)] = buffer_a[i][j];
+
+      for (size_t i = 1; i < chunk_size + 1; i++) {
+        for (size_t j = 1; j < chunk_size + 1; j++) {
+          buffer_c[r / dim + (i - 1)][(r % dim) * dim + (j - 1)] = buffer_a[i][j];
         }
       }
     }
