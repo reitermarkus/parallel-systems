@@ -22,16 +22,6 @@ class column {
       : matrix(_matrix), n_rows(_matrix.size()), col(_col) {}
 };
 
-template <typename T>
-std::ostream& operator<< (std::ostream& out, const std::vector<T>& v) {
-  out << '[';
-  if (!v.empty()) {
-    std::copy (v.begin(), v.end(), std::ostream_iterator<T>(out, ", "));
-  }
-  out << "\b\b]";
-  return out;
-}
-
 int main(int argc, char **argv) {
   size_t room_size = 500;
 
@@ -81,7 +71,12 @@ int main(int argc, char **argv) {
   vector<vector<float>> buffer_a(chunk_size + 2, vector<float>(chunk_size + 2, 273));
   vector<vector<float>> buffer_b(chunk_size + 2, vector<float>(chunk_size + 2));
 
-  size_t source_rank = (source_y / chunk_size) * dim + (source_x / chunk_size);
+
+  vector<int> coordinates {
+    static_cast<int>(source_x / chunk_size),
+    static_cast<int>(source_y / chunk_size),
+  };
+  size_t source_rank = cart_comm.rank(coordinates);
 
   auto chunk_source_y = source_y % chunk_size + 1;
   auto chunk_source_x = source_x % chunk_size + 1;
