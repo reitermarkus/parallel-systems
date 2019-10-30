@@ -12,8 +12,8 @@ namespace :a03 do
 
     qsub mpiexec('./heat_stencil_2d_mpi', env: :cpp),
          parallel_environment: 'openmpi-8perhost',
-         slots: 32,
-         name: 'pi',
+         slots: 16,
+         name: 'heat_stencil_2d',
          directory: 'a03/e01'
   end
 
