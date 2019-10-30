@@ -38,6 +38,10 @@
 
 ![](images/500.svg)
 
+For our measurement, we used strong scalability because it shows at what threshold a parallel version actually performs better than the sequential version.
+
+In our measurements we can observe that we only gain any significant speedup with a big enough problem size (500) and going from 4 slots to 16.
+
 ## Exercise 2 - heat stencil 3D
 
 | room size | time steps | time (in ms) |
