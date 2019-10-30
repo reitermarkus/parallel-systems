@@ -24,9 +24,10 @@ int main(int argc, char **argv) {
 
   mpi::cartesian_topology topology(dimensions);
 
-  size_t max_rank = reduce(topology.begin(), topology.end(), 1, [&](size_t acc, mpi::cartesian_dimension elem) {
-    return acc * elem.size;
-  });
+  size_t max_rank = 1;
+  for (auto t: topology) {
+    max_rank *= t.size;
+  }
 
   mpi::cartesian_communicator cart_comm(world, topology);
 
