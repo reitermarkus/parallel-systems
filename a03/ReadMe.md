@@ -1,6 +1,6 @@
 # Assignment 3
 
-## Exercise 2
+## Exercise 2 - heat stencil 2D
 
 ### Results for room size 167
 
