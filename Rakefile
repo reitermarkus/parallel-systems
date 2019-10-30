@@ -49,13 +49,15 @@ def load_env(env = nil)
   end
 end
 
-def mpiexec(executable, env:)
+def mpiexec(executable, env:, n: nil)
+  slots = n ? n : '"${NSLOTS}"'
+
   <<~SH
     #!/usr/bin/env bash
     set -euo pipefail
 
     #{load_env env}
-    mpiexec -n "${NSLOTS}" --mca btl self,vader,tcp #{executable.shellescape} "${@}"
+    time mpiexec -n #{slots} --mca btl self,vader,tcp #{executable.shellescape} "${@}"
   SH
 end
 
@@ -99,6 +101,7 @@ def qsub(executable, *args, mpi_environment: nil, parallel_environment:, slots:,
   script += <<~SH
     if [[ $exit_status -eq 0 ]]; then
       #{output_file ? "cat #{output_file.shellescape}" : ''}
+      #{error_log ? "cat #{error_log.shellescape}" : ''}
       exit 0
     else
       #{error_log ? "cat #{error_log.shellescape}" : ''}
