@@ -6,9 +6,10 @@ end
 
 def sync(directory)
   if windows?
+    sh 'rclone', 'sync', '-v', '--exclude', 'target/**', "./shared/", "lcc2:scratch/shared/"
     sh 'rclone', 'sync', '-v', '--exclude', 'target/**', "#{directory}/", "lcc2:scratch/#{directory}/"
   else
-    sh 'rsync', '-av', '--exclude', 'target', '--delete', "#{directory}/", "lcc2:scratch/#{directory}/"
+    sh 'rsync', '-av', '--exclude', 'target', '--delete', './shared', "#{directory}/", "lcc2:scratch/#{directory}/"
   end
 end
 
