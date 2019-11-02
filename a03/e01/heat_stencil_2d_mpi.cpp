@@ -13,8 +13,6 @@ class column {
   void serialize(Archive& ar, const unsigned int version) {
     (void)version;
 
-    ar & n_rows;
-
     for (size_t i = 0; i < n_rows; i++) {
       ar & matrix[i][col];
     }
