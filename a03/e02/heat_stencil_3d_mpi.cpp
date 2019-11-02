@@ -1,4 +1,5 @@
-#include "../../shared/heat_stencil.hpp"
+#include "heat_stencil_3d.hpp"
+#include "../../shared/parse_ull.hpp"
 #include "../boost.hpp"
 
 int main(int argc, char **argv) {

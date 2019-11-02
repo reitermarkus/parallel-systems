@@ -23,8 +23,8 @@ int main(int argc, char **argv) {
 
   buffer_a[source_y][source_x] = 273.0 + 60.0;
 
-  cout << " initial" << endl;
-  print_temperature(buffer_a, room_size, room_size);
+  cout << "initial" << endl;
+  print_temperature(buffer_a);
 
   // Propagate the temperature in each time step.
   for (int t = 0; t < time_steps; t++) {
@@ -55,13 +55,13 @@ int main(int argc, char **argv) {
 
     // Show intermediate step.
     if (!(t % 1000) && !getenv("CI"))  {
-      cout << " t=" << t << endl;
-      print_temperature(buffer_a, room_size, room_size);
+      cout << "t = " << t << endl;
+      print_temperature(buffer_a);
     }
   }
 
-  cout << " final" << endl;
-  print_temperature(buffer_a, room_size, room_size);
+  cout << "final" << endl;
+  print_temperature(buffer_a);
 
   for (auto i = 0; i < room_size; i++) {
     for (auto j = 0; j < room_size; j++) {

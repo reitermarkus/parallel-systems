@@ -1,4 +1,5 @@
-#include "heat_stencil.hpp"
+#include "heat_stencil_1d.hpp"
+#include "../../shared/parse_ull.hpp"
 
 int main(int argc, char **argv) {
   auto room_size = 2000;
@@ -13,15 +14,15 @@ int main(int argc, char **argv) {
 
   // Create buffers for storing temperature fields and
   // initialize temperature to 0° C (273 K) everywhere.
-  vector<double> buffer_a(room_size, 273);
-  vector<double> buffer_b(room_size);
+  vector<float> buffer_a(room_size, 273);
+  vector<float> buffer_b(room_size);
 
   // Place a heat source in one corner.
   auto source_x = room_size / 4;
   buffer_a[source_x] = 273 + 60;
 
-  print_temperature(buffer_a, room_size);
-  cout << " initial" << endl;
+  cout << "initial" << endl;
+  print_temperature(buffer_a);
 
   // Propagate the temperature in each time step.
   for (auto t = 0; t < time_steps; t++) {
@@ -33,11 +34,11 @@ int main(int argc, char **argv) {
       }
 
       // Get temperature at current position.
-      double temp_current = buffer_a[i];
+      float temp_current = buffer_a[i];
 
       // Get temperatures of adjacent cells.
-      double temp_left = (i != 0) ? buffer_a[i - 1] : temp_current;
-      double temp_right = (i != room_size - 1) ? buffer_a[i + 1] : temp_current;
+      float temp_left = (i != 0) ? buffer_a[i - 1] : temp_current;
+      float temp_right = (i != room_size - 1) ? buffer_a[i + 1] : temp_current;
 
       // Compute new temperature at current position.
       buffer_b[i] = temp_current + 0.2 * (temp_left + temp_right + (-2 * temp_current));
@@ -48,15 +49,15 @@ int main(int argc, char **argv) {
 
     // Show intermediate step.
     if (t % 1000 == 0) {
-      print_temperature(buffer_a, room_size);
-      cout << " t=" << t << endl;
+      cout << "t = " << t << endl;
+      print_temperature(buffer_a);
     }
   }
 
   // ---------- check ----------
 
-  print_temperature(buffer_a, room_size);
-  cout << " final" << endl;
+  cout << "final" << endl;
+  print_temperature(buffer_a);
 
   cout << "Verification: ";
 

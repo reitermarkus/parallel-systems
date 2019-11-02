@@ -211,7 +211,7 @@ int main(int argc, char **argv) {
       }
     }
 
-    print_temperature(buffer_c, room_size, room_size);
+    print_temperature(buffer_c);
 
     for (size_t i = 0; i < room_size; i++) {
       for (size_t j = 0; i < room_size; i++) {

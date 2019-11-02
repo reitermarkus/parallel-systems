@@ -1,74 +1,52 @@
 #pragma once
 
+#include "../../shared/heat_stencil.hpp"
+
 #include <iostream>
 #include <string>
 #include <vector>
 
 using namespace std;
 
-static const unsigned long RESOLUTION = 120;
-
 inline void print_temperature(const vector<vector<vector<float>>>& mat) {
   const auto width = mat[0].size();
   const auto height = mat.size();
   const auto depth = mat[0][0].size();
 
-  const string colors(" .-:=+*^X#%@");
-
-  const int num_colors = 10;
-
-  // boundaries for temperature (for simplicity hard-coded)
-  const float max = 273 + 30;
-  const float min = 273 + 0;
-
   // set the 'render' resolution
   const int h = 30;
   const int w = 50;
+  const int d = 3;
 
   // step size in each dimension
   const int sh = height / h;
   const int sw = width / w;
+  const int sd = depth / d;
 
-  for (size_t z = 0; z < depth; z++) {
-    // upper wall
-    for (size_t i = 0; i < w + 2; i++) {
-      printf("X");
-    }
+  for (size_t k = 0; k < d; k++) {
+    print_upper_wall(w);
 
-    printf("\n");
-
-    // room
     for (size_t i = 0; i < h; i++) {
-      // left wall
-      printf("X");
-      // actual room
+      print_left_wall();
+
       for (size_t j = 0; j < w; j++) {
         // get max temperature in this tile
-        float max_t = 0;
+        float max_temp = 0;
+
         for (size_t y = sh * i; y < sh * i + sh; y++) {
           for (size_t x = sw * j; x < sw * j + sw; x++) {
-            max_t = (max_t < mat[y][x][z]) ? mat[y][x][z] : max_t;
+            for (size_t z = sd * k; z < sd * k + sd; z++) {
+              max_temp =  max(max_temp, mat[y][x][z]);
+            }
           }
         }
 
-        float temp = max_t;
-
-        // pick the 'color'
-        int c = ((temp - min) / (max - min)) * num_colors;
-        c = (c >= num_colors) ? num_colors - 1 : ((c < 0) ? 0 : c);
-
-        // print the average temperature
-        printf("%c", colors[c]);
+        print_color(max_temp);
       }
-      // right wall
-      printf("X\n");
+
+      print_right_wall();
     }
 
-    // lower wall
-    for (size_t i = 0; i < w + 2; i++) {
-      printf("X");
-    }
-
-    printf("\n");
+    print_lower_wall(w);
   }
 }

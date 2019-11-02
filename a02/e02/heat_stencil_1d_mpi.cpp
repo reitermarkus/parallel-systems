@@ -1,5 +1,6 @@
 #include <chrono>
-#include "heat_stencil.hpp"
+#include "heat_stencil_1d.hpp"
+#include "../../shared/parse_ull.hpp"
 #include "../../shared/boost.hpp"
 
 int main(int argc, char **argv) {
@@ -34,8 +35,8 @@ int main(int argc, char **argv) {
 
   // Create buffers for storing temperature fields and
   // initialize temperature to 0° C (273 K) everywhere.
-  vector<double> buffer_a(buffer_size, 273);
-  vector<double> buffer_b(buffer_size);
+  vector<float> buffer_a(buffer_size, 273);
+  vector<float> buffer_b(buffer_size);
 
   // Place a heat source in one corner.
   auto source_x = room_size / 4;
@@ -67,10 +68,10 @@ int main(int argc, char **argv) {
       }
 
       // Get temperature at current position.
-      double temp_current = buffer_a[i];
+      float temp_current = buffer_a[i];
 
       // Get temperatures from left neighbor cell.
-      double temp_left;
+      float temp_left;
 
       if (i == 0) {
         if (rank == 0) {
@@ -83,7 +84,7 @@ int main(int argc, char **argv) {
       }
 
       // Get temperatures from right neighbor cell.
-      double temp_right;
+      float temp_right;
 
       if (i == buffer_size - 1) {
         if (rank * chunk_size + i >= room_size - 1) {
@@ -125,8 +126,8 @@ int main(int argc, char **argv) {
   auto end_time = chrono::high_resolution_clock::now();
   chrono::milliseconds duration = chrono::duration_cast<chrono::milliseconds>(end_time - start_time);
 
-  print_temperature(buffer_a, room_size);
-  cout << " final" << endl;
+  cout << "final" << endl;
+  print_temperature(buffer_a);
 
   printf("Duration: %17lld ms\n", (long long int)duration.count());
 
