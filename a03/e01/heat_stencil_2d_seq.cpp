@@ -1,4 +1,5 @@
-#include "../../shared/heat_stencil.hpp"
+#include "heat_stencil_2d.hpp"
+#include "../../shared/parse_ull.hpp"
 
 int main(int argc, char **argv) {
   auto room_size = 500;

@@ -1,4 +1,5 @@
-#include "../../shared/heat_stencil.hpp"
+#include "heat_stencil_2d.hpp"
+#include "../../shared/parse_ull.hpp"
 #include "../boost.hpp"
 
 class column {
@@ -70,7 +71,6 @@ int main(int argc, char **argv) {
 
   vector<vector<float>> buffer_a(chunk_size + 2, vector<float>(chunk_size + 2, 273));
   vector<vector<float>> buffer_b(chunk_size + 2, vector<float>(chunk_size + 2));
-
 
   vector<int> coordinates {
     static_cast<int>(source_x / chunk_size),
