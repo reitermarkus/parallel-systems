@@ -42,12 +42,8 @@ int main(int argc, char **argv) {
 
   auto chunk_size = (room_size + dim - 1) / dim;
 
-  vector<float> buffer_a(pow((chunk_size + 2), 3), 273.0);
-  vector<float> buffer_b(pow((chunk_size + 2), 3));
-
-  auto map_index = [&chunk_size](size_t i, size_t j, size_t k) {
-    return i * chunk_size * chunk_size + j * chunk_size + k;
-  };
+  vector<vector<vector<float>>> buffer_a(chunk_size + 2, vector<vector<float>>(chunk_size + 2, vector<float>(chunk_size + 2, 273.0)));
+  vector<vector<vector<float>>> buffer_b(chunk_size + 2, vector<vector<float>>(chunk_size + 2, vector<float>(chunk_size + 2)));
 
   int chunk_rank_x = source_x / chunk_size;
   int chunk_rank_y = source_y / chunk_size;
@@ -62,7 +58,7 @@ int main(int argc, char **argv) {
   auto chunk_source_z = source_z % chunk_size + 1;
 
   if (rank == source_rank) {
-    buffer_a[map_index(chunk_source_x, chunk_source_y, chunk_source_z)] += 60;
+    buffer_a[chunk_source_y][chunk_source_x][chunk_source_z] += 60;
   }
 
   auto [up_source, down_dest] = cart_comm.shifted_ranks(0, 1);
@@ -105,22 +101,22 @@ int main(int argc, char **argv) {
 
     // Send first row to top neighbor.
     if (up_dest >= 0) {
-      cart_comm.isend(up_dest, 3, buffer_a[1]);
+      // cart_comm.isend(up_dest, 3, buffer_a[1]);
     }
 
     // Receive last row from bottom neighbor.
     if (down_source >= 0) {
-      cart_comm.recv(down_source, 3, buffer_a[chunk_size + 1]);
+      // cart_comm.recv(down_source, 3, buffer_a[chunk_size + 1]);
     }
 
     // Send last row to bottom neighbor.
     if (down_dest >= 0) {
-      cart_comm.isend(down_dest, 4, buffer_a[chunk_size]);
+      // cart_comm.isend(down_dest, 4, buffer_a[chunk_size]);
     }
 
     // Receive top row from top neighbor.
     if (up_source >= 0) {
-      cart_comm.recv(up_source, 4, buffer_a[0]);
+      // cart_comm.recv(up_source, 4, buffer_a[0]);
     }
   }
 }
