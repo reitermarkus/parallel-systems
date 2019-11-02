@@ -173,7 +173,7 @@ int main(int argc, char **argv) {
         float temp_down = last_row ? temp_current : buffer_a[i + 1][j];
 
         // Compute new temperature at current position.
-        buffer_b[i][j] = temp_current + 0.2 * (temp_left + temp_right + temp_up + temp_down + (-4 * temp_current));
+        buffer_b[i][j] = temp_current + (1.0 / 5.0) * (temp_left + temp_right + temp_up + temp_down + (-4 * temp_current));
       }
     }
 

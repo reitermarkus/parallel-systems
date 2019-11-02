@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
       float temp_right = (i != room_size - 1) ? buffer_a[i + 1] : temp_current;
 
       // Compute new temperature at current position.
-      buffer_b[i] = temp_current + 0.2 * (temp_left + temp_right + (-2 * temp_current));
+      buffer_b[i] = temp_current + (1.0 / 3.0) * (temp_left + temp_right + (-2 * temp_current));
     }
 
     // Swap matrices (just pointers, not content).

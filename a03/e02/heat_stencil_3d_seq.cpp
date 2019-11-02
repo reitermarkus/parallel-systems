@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
           float temp_back = k == room_size - 1 ? temp_current : buffer_a[i][j][k + 1];
 
           // Compute new temperature at current position.
-          buffer_b[i][j][k] = temp_current + 0.15 * (temp_left + temp_right + temp_up + temp_down + temp_front + temp_back + (-6 * temp_current));
+          buffer_b[i][j][k] = temp_current + (1.0 / 7.0) * (temp_left + temp_right + temp_up + temp_down + temp_front + temp_back + (-6 * temp_current));
         }
       }
     }
