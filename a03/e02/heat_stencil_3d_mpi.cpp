@@ -190,10 +190,40 @@ int main(int argc, char **argv) {
   }
 
   for (size_t t = 0; t < time_steps; t++) {
+    vector<mpi::request> requests;
+
     // Send first column to left neighbor.
     if (left_dest >= 0) {
       x_direction left_side(buffer_a, 1);
-      cart_comm.isend(left_dest, 1, left_side);
+      requests.push_back(cart_comm.isend(left_dest, 1, left_side));
+    }
+
+    // Send last column to right neighbor.
+    if (right_dest >= 0) {
+      x_direction right_side(buffer_a, chunk_size);
+      requests.push_back(cart_comm.isend(right_dest, 2, right_side));
+    }
+
+    // Send first row to top neighbor.
+    if (up_dest >= 0) {
+      y_direction upper_level(buffer_a, 1);
+      requests.push_back(cart_comm.isend(up_dest, 3, upper_level));
+    }
+
+    // Send last row to bottom neighbor.
+    if (down_dest >= 0) {
+      y_direction lower_level(buffer_a, chunk_size);
+      requests.push_back(cart_comm.isend(down_dest, 4, lower_level));
+    }
+
+    if (front_dest >= 0) {
+      z_direction front_side(buffer_a, 1);
+      requests.push_back(cart_comm.isend(front_dest, 5, front_side));
+    }
+
+    if (back_dest >= 0) {
+      z_direction back_side(buffer_a, chunk_size);
+      requests.push_back(cart_comm.isend(back_dest, 6, back_side));
     }
 
     // Receive last column from right neighbor.
@@ -202,22 +232,10 @@ int main(int argc, char **argv) {
       cart_comm.recv(right_source, 1, right_side);
     }
 
-    // Send last column to right neighbor.
-    if (right_dest >= 0) {
-      x_direction right_side(buffer_a, chunk_size);
-      cart_comm.isend(right_dest, 2, right_side);
-    }
-
-    // Receive left column from left neighbor.
+    // Receive left column from left neighbor.r
     if (left_source >= 0) {
       x_direction left_side(buffer_a, 0);
       cart_comm.recv(left_source, 2, left_side);
-    }
-
-    // Send first row to top neighbor.
-    if (up_dest >= 0) {
-      y_direction upper_level(buffer_a, 1);
-      cart_comm.isend(up_dest, 3, upper_level);
     }
 
     // Receive last row from bottom neighbor.
@@ -226,37 +244,24 @@ int main(int argc, char **argv) {
       cart_comm.recv(down_source, 3, lower_level);
     }
 
-    // Send last row to bottom neighbor.
-    if (down_dest >= 0) {
-      y_direction lower_level(buffer_a, chunk_size);
-      cart_comm.isend(down_dest, 4, lower_level);
-    }
-
     // Receive top row from top neighbor.
     if (up_source >= 0) {
       y_direction upper_level(buffer_a, 0);
       cart_comm.recv(up_source, 4, upper_level);
     }
 
-    if (front_dest >= 0) {
-      z_direction front_side(buffer_a, 1);
-      cart_comm.isend(front_dest, 5, front_side);
-    }
 
     if (back_source >= 0) {
       z_direction back_side(buffer_a, chunk_size + 1);
       cart_comm.recv(back_source, 5, back_side);
     }
 
-    if (back_dest >= 0) {
-      z_direction back_side(buffer_a, chunk_size);
-      cart_comm.isend(back_dest, 6, back_side);
-    }
-
     if (front_source >= 0) {
       z_direction front_side(buffer_a, 0);
       cart_comm.recv(front_source, 6, front_side);
     }
+
+    mpi::wait_all(begin(requests), end(requests));
 
     for (size_t y = 1; y < chunk_size + 1; y++) {
       for (size_t x = 1; x < chunk_size + 1; x++) {
@@ -274,12 +279,12 @@ int main(int argc, char **argv) {
           // Get temperature at current position.
           float temp_current = buffer_a[y][x][z];
 
-          bool first_x = left_source < 0;
-          bool last_x = right_source < 0;
-          bool first_y = up_source < 0;
-          bool last_y = down_source < 0;
-          bool first_z = front_source < 0;
-          bool last_z = back_source < 0;
+          bool first_x = left_source < 0 && x <= 1;
+          bool last_x = right_source < 0 && x >= chunk_size;
+          bool first_y = up_source < 0 && y <= 1;
+          bool last_y = down_source < 0 && y >= chunk_size;
+          bool first_z = front_source < 0 && z <= 1;
+          bool last_z = back_source < 0 && z >= chunk_size;
 
           // Get temperatures of adjacent cells.
           float temp_left = first_x ? temp_current : buffer_a[y][x - 1][z];
@@ -290,25 +295,28 @@ int main(int argc, char **argv) {
           float temp_back = last_z ? temp_current : buffer_a[y][x][z + 1];
 
           // Compute new temperature at current position.
-          buffer_b[y][x][z] = temp_current + (1.0 / 7.0) * (temp_left + temp_right + temp_up + temp_down + temp_front + temp_back + (-6 * temp_current));
+          buffer_b[y][x][z] = temp_current + (temp_left + temp_right + temp_up + temp_down + temp_front + temp_back - 6.0 * temp_current) / 7.0;
         }
       }
     }
-    //libc++abi.dylib: terminating with uncaught exception of type boost::wrapexcept<boost::mpi::exception>: MPI_Mprobe: MPI_ERR_RANK: invalid rank
+
     swap(buffer_a, buffer_b);
   }
+
+  collector send_buffer(buffer_a, chunk_size, global_x, global_y, global_z, false);
+  auto request = cart_comm.isend(0, 7, send_buffer);
 
   if (rank == 0) {
     vector<vector<vector<float>>> buffer_c(room_size, vector<vector<float>>(room_size, vector<float>(room_size, 273.0)));
 
-    for (size_t r = 1; r < max_rank; r++) {
-      collector buffer_collector(buffer_c, chunk_size, 0, 0, 0, true);
-      cart_comm.recv(r, 7, buffer_collector);
+    for (size_t r = 0; r < max_rank; r++) {
+      collector receive_buffer(buffer_c, chunk_size, 0, 0, 0, true);
+      cart_comm.recv(r, 7, receive_buffer);
     }
 
     print_temperature(buffer_c);
 
-    for (auto y: buffer_a) {
+    for (auto y: buffer_c) {
       for (auto x: y) {
         for (auto z: x) {
           auto temp = z;
@@ -323,10 +331,9 @@ int main(int argc, char **argv) {
     }
 
     cout << "Verification: OK" << endl;
-  } else {
-    collector buffer_collector(buffer_a, chunk_size, global_x, global_y, global_z, false);
-    cart_comm.send(0, 7, buffer_collector);
   }
+
+  request.wait();
 
   return EXIT_SUCCESS;
 }
