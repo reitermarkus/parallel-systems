@@ -1,7 +1,7 @@
 #include "heat_stencil_3d.hpp"
 #include "heat_stencil_3d_serialize.hpp"
 #include "../../shared/parse_ull.hpp"
-#include "../boost.hpp"
+#include "../../shared/boost.hpp"
 
 int main(int argc, char **argv) {
   size_t room_size = 50;

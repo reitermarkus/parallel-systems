@@ -1,6 +1,6 @@
 #include <vector>
 
-#include "../boost.hpp"
+#include "../../shared/boost.hpp"
 
 class x_direction {
   vector<vector<vector<float>>>& matrix;

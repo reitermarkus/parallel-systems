@@ -6,4 +6,6 @@
 #include <boost/mpi.hpp>
 #pragma GCC diagnostic pop
 
+#include <boost/mpi/cartesian_communicator.hpp>
+
 namespace mpi = boost::mpi;

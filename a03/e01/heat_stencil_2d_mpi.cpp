@@ -1,6 +1,6 @@
 #include "heat_stencil_2d.hpp"
 #include "../../shared/parse_ull.hpp"
-#include "../boost.hpp"
+#include "../../shared/boost.hpp"
 
 class column {
   vector<vector<float>>& matrix;
