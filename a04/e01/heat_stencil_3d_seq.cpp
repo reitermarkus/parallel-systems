@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
             continue;
           }
 
-          calc_temperature(x, y, z, x, y, z, room_size, buffer_a, buffer_b);
+          calc_temperature(room_size, x, y, z, x, y, z, buffer_a, buffer_b);
         }
       }
     }

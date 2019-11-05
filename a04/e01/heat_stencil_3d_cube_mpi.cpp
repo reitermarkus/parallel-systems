@@ -172,7 +172,7 @@ int main(int argc, char **argv) {
             continue;
           }
 
-          calc_temperature(x, y, z, global_x, global_y, global_z, room_size, buffer_a, buffer_b);
+          calc_temperature(room_size, x, y, z, global_x, global_y, global_z, buffer_a, buffer_b);
         }
       }
     }
