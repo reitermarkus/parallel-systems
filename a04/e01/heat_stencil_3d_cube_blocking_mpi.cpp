@@ -82,147 +82,55 @@ int main(int argc, char **argv) {
     cout << "Computing heat-distribution for room size " << room_size << " for " << time_steps << " timestaps\n";
   }
 
+  x_direction left_side_send(buffer_a, 1);
+  x_direction right_side_send(buffer_a, chunk_size);
+  y_direction upper_level_send(buffer_a, 1);
+  y_direction lower_level_send(buffer_a, chunk_size);
+  z_direction front_side_send(buffer_a, 1);
+  z_direction back_side_send(buffer_a, chunk_size);
+
+  x_direction left_side_recv(buffer_a, 0);
+  x_direction right_side_recv(buffer_a, chunk_size + 1);
+  y_direction upper_level_recv(buffer_a, 0);
+  y_direction lower_level_recv(buffer_a, chunk_size + 1);
+  z_direction back_side_recv(buffer_a, chunk_size + 1);
+  z_direction front_side_recv(buffer_a, 0);
+
   for (size_t t = 0; t < time_steps; t++) {
-     if (rank_x % 2) {
-      // Send last column to right neighbor.
-      if (right_dest >= 0) {
-        x_direction right_side(buffer_a, chunk_size);
-        cart_comm.send(right_dest, 2, right_side);
-      }
-
-      // Receive left column from left neighbor.r
-      if (left_source >= 0) {
-        x_direction left_side(buffer_a, 0);
-        cart_comm.recv(left_source, 2, left_side);
-      }
-
-      // Send first column to left neighbor.
-      if (left_dest >= 0) {
-        x_direction left_side(buffer_a, 1);
-        cart_comm.send(left_dest, 1, left_side);
-      }
-
-      // Receive last column from right neighbor.
-      if (right_source >= 0) {
-        x_direction right_side(buffer_a, chunk_size + 1);
-        cart_comm.recv(right_source, 1, right_side);
-      }
-     } else {
-      // Receive left column from left neighbor.r
-      if (left_source >= 0) {
-        x_direction left_side(buffer_a, 0);
-        cart_comm.recv(left_source, 2, left_side);
-      }
-
-      // Send last column to right neighbor.
-      if (right_dest >= 0) {
-        x_direction right_side(buffer_a, chunk_size);
-        cart_comm.send(right_dest, 2, right_side);
-      }
-
-      // Receive last column from right neighbor.
-      if (right_source >= 0) {
-        x_direction right_side(buffer_a, chunk_size + 1);
-        cart_comm.recv(right_source, 1, right_side);
-      }
-
-      // Send first column to left neighbor.
-      if (left_dest >= 0) {
-        x_direction left_side(buffer_a, 1);
-        cart_comm.send(left_dest, 1, left_side);
-      }
+    if (rank_y % 2) {
+      if (up_dest >= 0)     cart_comm.send(up_dest, 3, upper_level_send);
+      if (down_source >= 0) cart_comm.recv(down_source, 3, lower_level_recv);
+      if (down_dest >= 0)   cart_comm.send(down_dest, 4, lower_level_send);
+      if (up_source >= 0)   cart_comm.recv(up_source, 4, upper_level_recv);
+    } else {
+      if (down_source >= 0) cart_comm.recv(down_source, 3, lower_level_recv);
+      if (up_dest >= 0)     cart_comm.send(up_dest, 3, upper_level_send);
+      if (up_source >= 0)   cart_comm.recv(up_source, 4, upper_level_recv);
+      if (down_dest >= 0)   cart_comm.send(down_dest, 4, lower_level_send);
     }
 
-    if (rank % 2) {
-      // Send first row to top neighbor.
-      if (up_dest >= 0) {
-        y_direction upper_level(buffer_a, 1);
-        cart_comm.send(up_dest, 3, upper_level);
-      }
-
-      // Receive last row from bottom neighbor.
-      if (down_source >= 0) {
-        y_direction lower_level(buffer_a, chunk_size + 1);
-        cart_comm.recv(down_source, 3, lower_level);
-      }
-
-      // Send last row to bottom neighbor.
-      if (down_dest >= 0) {
-        y_direction lower_level(buffer_a, chunk_size);
-        cart_comm.send(down_dest, 4, lower_level);
-      }
-
-      // Receive top row from top neighbor.
-      if (up_source >= 0) {
-        y_direction upper_level(buffer_a, 0);
-        cart_comm.recv(up_source, 4, upper_level);
-      }
-    } else {
-      // Receive last row from bottom neighbor.
-      if (down_source >= 0) {
-        y_direction lower_level(buffer_a, chunk_size + 1);
-        cart_comm.recv(down_source, 3, lower_level);
-      }
-
-      // Send first row to top neighbor.
-      if (up_dest >= 0) {
-        y_direction upper_level(buffer_a, 1);
-        cart_comm.send(up_dest, 3, upper_level);
-      }
-
-      // Receive top row from top neighbor.
-      if (up_source >= 0) {
-        y_direction upper_level(buffer_a, 0);
-        cart_comm.recv(up_source, 4, upper_level);
-      }
-
-      // Send last row to bottom neighbor.
-      if (down_dest >= 0) {
-        y_direction lower_level(buffer_a, chunk_size);
-        cart_comm.send(down_dest, 4, lower_level);
-      }
+    if (rank_x % 2) {
+      if (right_dest >= 0)   cart_comm.send(right_dest, 2, right_side_send);
+      if (left_source >= 0)  cart_comm.recv(left_source, 2, left_side_recv);
+      if (left_dest >= 0)    cart_comm.send(left_dest, 1, left_side_send);
+      if (right_source >= 0) cart_comm.recv(right_source, 1, right_side_recv);
+     } else {
+      if (left_source >= 0)  cart_comm.recv(left_source, 2, left_side_recv);
+      if (right_dest >= 0)   cart_comm.send(right_dest, 2, right_side_send);
+      if (right_source >= 0) cart_comm.recv(right_source, 1, right_side_recv);
+      if (left_dest >= 0)    cart_comm.send(left_dest, 1, left_side_send);
     }
 
     if (rank_z % 2) {
-      if (front_dest >= 0) {
-        z_direction front_side(buffer_a, 1);
-        cart_comm.send(front_dest, 5, front_side);
-      }
-
-      if (back_source >= 0) {
-        z_direction back_side(buffer_a, chunk_size + 1);
-        cart_comm.recv(back_source, 5, back_side);
-      }
-
-      if (back_dest >= 0) {
-        z_direction back_side(buffer_a, chunk_size);
-        cart_comm.send(back_dest, 6, back_side);
-      }
-
-      if (front_source >= 0) {
-        z_direction front_side(buffer_a, 0);
-        cart_comm.recv(front_source, 6, front_side);
-      }
+      if (front_dest >= 0)   cart_comm.send(front_dest, 5, front_side_send);
+      if (back_source >= 0)  cart_comm.recv(back_source, 5, back_side_recv);
+      if (back_dest >= 0)    cart_comm.send(back_dest, 6, back_side_send);
+      if (front_source >= 0) cart_comm.recv(front_source, 6, front_side_recv);
     } else {
-      if (back_source >= 0) {
-        z_direction back_side(buffer_a, chunk_size + 1);
-        cart_comm.recv(back_source, 5, back_side);
-      }
-
-      if (front_dest >= 0) {
-        z_direction front_side(buffer_a, 1);
-        cart_comm.send(front_dest, 5, front_side);
-      }
-
-      if (front_source >= 0) {
-        z_direction front_side(buffer_a, 0);
-        cart_comm.recv(front_source, 6, front_side);
-      }
-
-      if (back_dest >= 0) {
-        z_direction back_side(buffer_a, chunk_size);
-        cart_comm.send(back_dest, 6, back_side);
-      }
+      if (back_source >= 0)  cart_comm.recv(back_source, 5, back_side_recv);
+      if (front_dest >= 0)   cart_comm.send(front_dest, 5, front_side_send);
+      if (front_source >= 0) cart_comm.recv(front_source, 6, front_side_recv);
+      if (back_dest >= 0)    cart_comm.send(back_dest, 6, back_side_send);
     }
 
     for (size_t y = 1; y < chunk_size + 1; y++) {
@@ -242,7 +150,7 @@ int main(int argc, char **argv) {
             continue;
           }
 
-          calc_temperature(x, y, z, global_x, global_y, global_z, room_size, buffer_a, buffer_b);
+          calc_temperature(room_size, x, y, z, global_x, global_y, global_z, buffer_a, buffer_b);
         }
       }
     }

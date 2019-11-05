@@ -76,56 +76,28 @@ int main(int argc, char **argv) {
     cout << "Computing heat-distribution for room size " << room_size << " for " << time_steps << " timestaps\n";
   }
 
+  y_direction upper_level_send(buffer_a, 1);
+  y_direction lower_level_send(buffer_a, chunk_size);
+  x_direction left_side_send(buffer_a, 1);
+  x_direction right_side_send(buffer_a, chunk_size);
+
+  y_direction upper_level_recv(buffer_a, 0);
+  y_direction lower_level_recv(buffer_a, chunk_size + 1);
+  x_direction left_side_recv(buffer_a, 0);
+  x_direction right_side_recv(buffer_a, chunk_size + 1);
+
   for (size_t t = 0; t < time_steps; t++) {
     vector<mpi::request> requests;
 
-    // Send first column to left neighbor.
-    if (left_dest >= 0) {
-      x_direction left_side(buffer_a, 1);
-      requests.push_back(cart_comm.isend(left_dest, 1, left_side));
-    }
+    if (up_dest >= 0)    requests.push_back(cart_comm.isend(up_dest, 3, upper_level_send));
+    if (down_dest >= 0)  requests.push_back(cart_comm.isend(down_dest, 4, lower_level_send));
+    if (left_dest >= 0)  requests.push_back(cart_comm.isend(left_dest, 1, left_side_send));
+    if (right_dest >= 0) requests.push_back(cart_comm.isend(right_dest, 2, right_side_send));
 
-    // Send last column to right neighbor.
-    if (right_dest >= 0) {
-      x_direction right_side(buffer_a, chunk_size);
-      requests.push_back(cart_comm.isend(right_dest, 2, right_side));
-    }
-
-    // Send first row to top neighbor.
-    if (up_dest >= 0) {
-      y_direction upper_level(buffer_a, 1);
-      requests.push_back(cart_comm.isend(up_dest, 3, upper_level));
-    }
-
-    // Send last row to bottom neighbor.
-    if (down_dest >= 0) {
-      y_direction lower_level(buffer_a, chunk_size);
-      requests.push_back(cart_comm.isend(down_dest, 4, lower_level));
-    }
-
-    // Receive last column from right neighbor.
-    if (right_source >= 0) {
-      x_direction right_side(buffer_a, chunk_size + 1);
-      cart_comm.recv(right_source, 1, right_side);
-    }
-
-    // Receive left column from left neighbor.r
-    if (left_source >= 0) {
-      x_direction left_side(buffer_a, 0);
-      cart_comm.recv(left_source, 2, left_side);
-    }
-
-    // Receive last row from bottom neighbor.
-    if (down_source >= 0) {
-      y_direction lower_level(buffer_a, chunk_size + 1);
-      cart_comm.recv(down_source, 3, lower_level);
-    }
-
-    // Receive top row from top neighbor.
-    if (up_source >= 0) {
-      y_direction upper_level(buffer_a, 0);
-      cart_comm.recv(up_source, 4, upper_level);
-    }
+    if (down_source >= 0)  requests.push_back(cart_comm.irecv(down_source, 3, lower_level_recv));
+    if (up_source >= 0)    requests.push_back(cart_comm.irecv(up_source, 4, upper_level_recv));
+    if (right_source >= 0) requests.push_back(cart_comm.irecv(right_source, 1, right_side_recv));
+    if (left_source >= 0)  requests.push_back(cart_comm.irecv(left_source, 2, left_side_recv));
 
     mpi::wait_all(begin(requests), end(requests));
 

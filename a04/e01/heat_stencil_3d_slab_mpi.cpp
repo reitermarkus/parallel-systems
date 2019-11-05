@@ -69,32 +69,20 @@ int main(int argc, char **argv) {
     cout << "Computing heat-distribution for room size " << room_size << " for " << time_steps << " timestaps\n";
   }
 
+  y_direction upper_level_send(buffer_a, 1);
+  y_direction lower_level_send(buffer_a, chunk_size);
+
+  y_direction upper_level_recv(buffer_a, 0);
+  y_direction lower_level_recv(buffer_a, chunk_size + 1);
+
   for (size_t t = 0; t < time_steps; t++) {
     vector<mpi::request> requests;
 
-    // Send first row to top neighbor.
-    if (up_dest >= 0) {
-      y_direction upper_level(buffer_a, 1);
-      requests.push_back(cart_comm.isend(up_dest, 3, upper_level));
-    }
+    if (up_dest >= 0)    requests.push_back(cart_comm.isend(up_dest, 3, upper_level_send));
+    if (down_dest >= 0)  requests.push_back(cart_comm.isend(down_dest, 4, lower_level_send));
 
-    // Send last row to bottom neighbor.
-    if (down_dest >= 0) {
-      y_direction lower_level(buffer_a, chunk_size);
-      requests.push_back(cart_comm.isend(down_dest, 4, lower_level));
-    }
-
-    // Receive last row from bottom neighbor.
-    if (down_source >= 0) {
-      y_direction lower_level(buffer_a, chunk_size + 1);
-      cart_comm.recv(down_source, 3, lower_level);
-    }
-
-    // Receive top row from top neighbor.
-    if (up_source >= 0) {
-      y_direction upper_level(buffer_a, 0);
-      cart_comm.recv(up_source, 4, upper_level);
-    }
+    if (down_source >= 0)  requests.push_back(cart_comm.irecv(down_source, 3, lower_level_recv));
+    if (up_source >= 0)    requests.push_back(cart_comm.irecv(up_source, 4, upper_level_recv));
 
     mpi::wait_all(begin(requests), end(requests));
 
