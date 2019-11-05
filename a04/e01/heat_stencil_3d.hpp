@@ -54,7 +54,8 @@ inline void print_temperature(const vector<vector<vector<float>>>& mat) {
 inline void calc_temperature(
   const size_t& x, const size_t& y, const size_t& z,
   const size_t& global_x, const size_t& global_y, const size_t& global_z,
-  const size_t& room_size, vector<vector<vector<float>>>& buffer_a, vector<vector<vector<float>>>& buffer_b
+  const size_t& room_size,
+  vector<vector<vector<float>>>& buffer_a, vector<vector<vector<float>>>& buffer_b
 ) {
   // Get temperature at current position.
   float temp_current = buffer_a[y][x][z];

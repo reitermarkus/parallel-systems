@@ -26,30 +26,16 @@ int main(int argc, char **argv) {
 
   // Propagate the temperature in each time step.
   for (size_t t = 0; t < time_steps; t++) {
-    for (size_t i = 0; i < room_size; i++) {
-      for (size_t j = 0; j < room_size; j++) {
-        for (size_t k = 0; k < room_size; k++) {
+    for (size_t y = 0; y < room_size; y++) {
+      for (size_t x = 0; x < room_size; x++) {
+        for (size_t z = 0; z < room_size; z++) {
           // The center stays constant (the heat is still on).
-          if (i == source_x && j == source_y && k == source_z) {
-            buffer_b[i][j][k] = buffer_a[i][j][k];
+          if (y == source_x && x == source_y && z == source_z) {
+            buffer_b[y][x][z] = buffer_a[y][x][z];
             continue;
           }
 
-          // Get temperature at current position.
-          float temp_current = buffer_a[i][j][k];
-
-          // Get temperatures of adjacent cells.
-          float temp_up = i == 0 ? temp_current : buffer_a[i - 1][j][k];
-          float temp_down = i == room_size - 1 ? temp_current: buffer_a[i + 1][j][k];
-
-          float temp_left = j == 0 ? temp_current : buffer_a[i][j - 1][k];
-          float temp_right = j == room_size - 1 ? temp_current : buffer_a[i][j + 1][k];
-
-          float temp_front = k == 0 ? temp_current : buffer_a[i][j][k - 1];
-          float temp_back = k == room_size - 1 ? temp_current : buffer_a[i][j][k + 1];
-
-          // Compute new temperature at current position.
-          buffer_b[i][j][k] = temp_current + (temp_left + temp_right + temp_up + temp_down + temp_front + temp_back - 6.0 * temp_current) / 7.0;
+          calc_temperature(x, y, z, x, y, z, room_size, buffer_a, buffer_b);
         }
       }
     }
