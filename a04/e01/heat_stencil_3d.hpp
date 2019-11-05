@@ -77,3 +77,23 @@ inline void calc_temperature(
   // Compute new temperature at current position.
   buffer_b[y][x][z] = temp_current + (temp_left + temp_right + temp_up + temp_down + temp_front + temp_back - 6.0 * temp_current) / 7.0;
 }
+
+int verify(const vector<vector<vector<float>>>& buffer) {
+  for (auto y: buffer) {
+    for (auto x: y) {
+      for (auto z: x) {
+        auto temp = z;
+
+        if (temp < 273.0 || temp > 273.0 + 60.0) {
+          cout << "wrong temperature: " << temp << endl;
+          cout << "Verification: FAILED" << endl;
+          return EXIT_FAILURE;
+        }
+      }
+    }
+  }
+
+  cout << "Verification: OK" << endl;
+
+  return EXIT_SUCCESS;
+}

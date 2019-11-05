@@ -60,21 +60,5 @@ int main(int argc, char **argv) {
 
   print_temperature(buffer_a);
 
-  for (size_t i = 0; i < room_size; i++) {
-    for (size_t j = 0; j < room_size; j++) {
-      for (size_t k = 0; k < room_size; k++) {
-        auto temp = buffer_a[i][j][k];
-
-        if (temp < 273.0 || temp > 273.0 + 60.0) {
-          cout << "wrong temperature: " << temp << endl;
-          cout << "Verification: FAILED" << endl;
-          return EXIT_FAILURE;
-        }
-      }
-    }
-  }
-
-  cout << "Verification: OK" << endl;
-
-  return EXIT_SUCCESS;
+  return verify(buffer_a);
 }

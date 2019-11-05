@@ -144,21 +144,7 @@ int main(int argc, char **argv) {
 
     print_temperature(buffer_c);
 
-    for (auto y: buffer_c) {
-      for (auto x: y) {
-        for (auto z: x) {
-          auto temp = z;
-
-          if (temp < 273.0 || temp > 273.0 + 60.0) {
-            cout << "wrong temperature: " << temp << endl;
-            cout << "Verification: FAILED" << endl;
-            return EXIT_FAILURE;
-          }
-        }
-      }
-    }
-
-    cout << "Verification: OK" << endl;
+    return verify(buffer_c);
   } else {
     request.wait();
   }
