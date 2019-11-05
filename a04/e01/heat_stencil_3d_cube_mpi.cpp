@@ -172,26 +172,7 @@ int main(int argc, char **argv) {
             continue;
           }
 
-          // Get temperature at current position.
-          float temp_current = buffer_a[y][x][z];
-
-          bool first_x = global_x == 0;
-          bool last_x = global_x >= room_size - 1;
-          bool first_y = global_y == 0;
-          bool last_y = global_y >= room_size - 1;
-          bool first_z = global_z == 0;
-          bool last_z = global_z >= room_size - 1;
-
-          // Get temperatures of adjacent cells.
-          float temp_left = first_x ? temp_current : buffer_a[y][x - 1][z];
-          float temp_right = last_x ? temp_current : buffer_a[y][x + 1][z];
-          float temp_up = first_y ? temp_current : buffer_a[y - 1][x][z];
-          float temp_down = last_y ? temp_current : buffer_a[y + 1][x][z];
-          float temp_front = first_z ? temp_current : buffer_a[y][x][z - 1];
-          float temp_back = last_z ? temp_current : buffer_a[y][x][z + 1];
-
-          // Compute new temperature at current position.
-          buffer_b[y][x][z] = temp_current + (temp_left + temp_right + temp_up + temp_down + temp_front + temp_back - 6.0 * temp_current) / 7.0;
+          calc_temperature(x, y, z, global_x, global_y, global_z, room_size, buffer_a, buffer_b);
         }
       }
     }
