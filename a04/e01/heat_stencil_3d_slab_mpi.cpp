@@ -78,8 +78,8 @@ int main(int argc, char **argv) {
   for (size_t t = 0; t < time_steps; t++) {
     vector<mpi::request> requests;
 
-    if (up_dest >= 0)    requests.push_back(cart_comm.isend(up_dest, 3, upper_level_send));
-    if (down_dest >= 0)  requests.push_back(cart_comm.isend(down_dest, 4, lower_level_send));
+    if (up_dest >= 0)      requests.push_back(cart_comm.isend(up_dest, 3, upper_level_send));
+    if (down_dest >= 0)    requests.push_back(cart_comm.isend(down_dest, 4, lower_level_send));
 
     if (down_source >= 0)  requests.push_back(cart_comm.irecv(down_source, 3, lower_level_recv));
     if (up_source >= 0)    requests.push_back(cart_comm.irecv(up_source, 4, upper_level_recv));

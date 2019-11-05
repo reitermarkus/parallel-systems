@@ -86,19 +86,29 @@ int main(int argc, char **argv) {
   x_direction right_side_recv(buffer_a, chunk_size + 1);
 
   for (size_t t = 0; t < time_steps; t++) {
-    vector<mpi::request> requests;
+    if (rank_y % 2) {
+      if (up_dest >= 0)     cart_comm.send(up_dest, 3, upper_level_send);
+      if (down_source >= 0) cart_comm.recv(down_source, 3, lower_level_recv);
+      if (down_dest >= 0)   cart_comm.send(down_dest, 4, lower_level_send);
+      if (up_source >= 0)   cart_comm.recv(up_source, 4, upper_level_recv);
+    } else {
+      if (down_source >= 0) cart_comm.recv(down_source, 3, lower_level_recv);
+      if (up_dest >= 0)     cart_comm.send(up_dest, 3, upper_level_send);
+      if (up_source >= 0)   cart_comm.recv(up_source, 4, upper_level_recv);
+      if (down_dest >= 0)   cart_comm.send(down_dest, 4, lower_level_send);
+    }
 
-    if (up_dest >= 0)      requests.push_back(cart_comm.isend(up_dest, 3, upper_level_send));
-    if (down_dest >= 0)    requests.push_back(cart_comm.isend(down_dest, 4, lower_level_send));
-    if (left_dest >= 0)    requests.push_back(cart_comm.isend(left_dest, 1, left_side_send));
-    if (right_dest >= 0)   requests.push_back(cart_comm.isend(right_dest, 2, right_side_send));
-
-    if (down_source >= 0)  requests.push_back(cart_comm.irecv(down_source, 3, lower_level_recv));
-    if (up_source >= 0)    requests.push_back(cart_comm.irecv(up_source, 4, upper_level_recv));
-    if (right_source >= 0) requests.push_back(cart_comm.irecv(right_source, 1, right_side_recv));
-    if (left_source >= 0)  requests.push_back(cart_comm.irecv(left_source, 2, left_side_recv));
-
-    mpi::wait_all(begin(requests), end(requests));
+    if (rank_x % 2) {
+      if (right_dest >= 0)   cart_comm.send(right_dest, 2, right_side_send);
+      if (left_source >= 0)  cart_comm.recv(left_source, 2, left_side_recv);
+      if (left_dest >= 0)    cart_comm.send(left_dest, 1, left_side_send);
+      if (right_source >= 0) cart_comm.recv(right_source, 1, right_side_recv);
+     } else {
+      if (left_source >= 0)  cart_comm.recv(left_source, 2, left_side_recv);
+      if (right_dest >= 0)   cart_comm.send(right_dest, 2, right_side_send);
+      if (right_source >= 0) cart_comm.recv(right_source, 1, right_side_recv);
+      if (left_dest >= 0)    cart_comm.send(left_dest, 1, left_side_send);
+    }
 
     for (size_t y = 1; y < chunk_size + 1; y++) {
       for (size_t x = 1; x < chunk_size + 1; x++) {
