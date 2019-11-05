@@ -1,5 +1,5 @@
 #include "heat_stencil_3d.hpp"
-#include "heat_stencil_3d_serialize.hpp"
+#include "heat_stencil_3d_cube_serialize.hpp"
 #include "../../shared/parse_ull.hpp"
 #include "../../shared/boost.hpp"
 
