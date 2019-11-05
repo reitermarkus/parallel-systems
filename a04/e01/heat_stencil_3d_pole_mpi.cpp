@@ -1,86 +1,8 @@
 #include "heat_stencil_3d.hpp"
-#include "heat_stencil_3d_cube_serialize.hpp"
+#include "heat_stencil_3d_pole_serialize.hpp"
 #include "../../shared/parse_ull.hpp"
 #include "../../shared/boost.hpp"
 #include "../../shared/vector.hpp"
-
-vector<float> flatten_x_direction(vector<vector<vector<float>>>& buffer, size_t x) {
-  auto height = buffer.size();
-  auto depth = buffer[0][0].size();
-
-  vector<float> flattened(height * depth);
-
-  for (size_t y = 0; y < height; y++) {
-    for (size_t z = 0; z < depth; z++) {
-      flattened[y * depth + z] = buffer[y][x][z];
-    }
-  }
-
-  return flattened;
-}
-
-vector<float> flatten_y_direction(const vector<vector<vector<float>>>& buffer, size_t y) {
-  auto width = buffer[0].size();
-  auto depth = buffer[0][0].size();
-
-  vector<float> flattened(width * depth);
-
-  for (size_t x = 0; x < width; x++) {
-    for (size_t z = 0; z < depth; z++) {
-      flattened[x * depth + z] = buffer[y][x][z];
-    }
-  }
-
-  return flattened;
-}
-
-void deflatten_x_direction(const vector<float>& flattened, vector<vector<vector<float>>>& buffer, size_t x) {
-  auto height = buffer.size();
-  auto depth = buffer[0][0].size();
-
-  for (size_t y = 0; y < height; y++) {
-    for (size_t z = 0; z < depth; z++) {
-      buffer[y][x][z] = flattened[y * depth + z];
-    }
-  }
-}
-
-void deflatten_y_direction(const vector<float>& flattened, vector<vector<vector<float>>>& buffer, size_t y) {
-  auto width = buffer[0].size();
-  auto depth = buffer[0][0].size();
-
-  for (size_t x = 0; x < width; x++) {
-    for (size_t z = 0; z < depth; z++) {
-      buffer[y][x][z] = flattened[x * depth + z];
-    }
-  }
-}
-
-vector<float> flatten_z_direction(const vector<vector<vector<float>>>& buffer, size_t z) {
-  auto height = buffer.size();
-  auto width = buffer[0].size();
-
-  vector<float> flattened(height * width);
-
-  for (size_t y = 0; y < height; y++) {
-    for (size_t x = 0; x < width; x++) {
-      flattened[y * width + x] = buffer[y][x][z];
-    }
-  }
-
-  return flattened;
-}
-
-void deflatten_z_direction(const vector<float>& flattened, vector<vector<vector<float>>>& buffer, size_t z) {
-  auto height = buffer.size();
-  auto width = buffer[0].size();
-
-  for (size_t y = 0; y < height; y++) {
-    for (size_t x = 0; x < width; x++) {
-      buffer[y][x][z] = flattened[y * width + x];
-    }
-  }
-}
 
 int main(int argc, char **argv) {
   size_t room_size = 50;
@@ -95,10 +17,9 @@ int main(int argc, char **argv) {
   size_t size = world.size();
   size_t rank = world.rank();
 
-  size_t dim = floor(cbrtf(static_cast<float>(size)));
+  size_t dim = floor(sqrt(static_cast<float>(size)));
 
   vector<mpi::cartesian_dimension> dimensions = {
-    mpi::cartesian_dimension(dim),
     mpi::cartesian_dimension(dim),
     mpi::cartesian_dimension(dim),
   };
@@ -114,6 +35,7 @@ int main(int argc, char **argv) {
 
   if (rank >= max_rank) {
     return EXIT_SUCCESS;
+
   }
 
   auto source_x = room_size / 4;
@@ -122,36 +44,31 @@ int main(int argc, char **argv) {
 
   auto chunk_size = (room_size + dim - 1) / dim;
 
-  vector<vector<vector<float>>> buffer_a(chunk_size + 2, vector<vector<float>>(chunk_size + 2, vector<float>(chunk_size + 2, 273.0)));
-  vector<vector<vector<float>>> buffer_b(chunk_size + 2, vector<vector<float>>(chunk_size + 2, vector<float>(chunk_size + 2)));
+  vector<vector<vector<float>>> buffer_a(chunk_size + 2, vector<vector<float>>(chunk_size + 2, vector<float>(room_size, 273.0)));
+  vector<vector<vector<float>>> buffer_b(chunk_size + 2, vector<vector<float>>(chunk_size + 2, vector<float>(room_size)));
 
   int chunk_rank_x = source_x / chunk_size;
   int chunk_rank_y = source_y / chunk_size;
-  int chunk_rank_z = source_z / chunk_size;
 
-  vector<int> coordinates {chunk_rank_y, chunk_rank_x, chunk_rank_z};
+  vector<int> coordinates {chunk_rank_y, chunk_rank_x};
 
   size_t source_rank = cart_comm.rank(coordinates);
 
   auto chunk_source_y = source_y % chunk_size + 1;
   auto chunk_source_x = source_x % chunk_size + 1;
-  auto chunk_source_z = source_z % chunk_size + 1;
 
   if (rank == source_rank) {
-    buffer_a[chunk_source_y][chunk_source_x][chunk_source_z] += 60;
+    buffer_a[chunk_source_y][chunk_source_x][source_z] += 60;
   }
 
-  auto global_coords = cart_comm.coordinates(rank);
-  auto rank_y = global_coords[0];
-  auto rank_x = global_coords[1];
-  auto rank_z = global_coords[2];
+  auto rank_coords = cart_comm.coordinates(rank);
+  auto rank_y = rank_coords[0];
+  auto rank_x = rank_coords[1];
 
   auto [up_source, down_dest] = cart_comm.shifted_ranks(0, 1);
   auto [down_source, up_dest] = cart_comm.shifted_ranks(0, -1);
   auto [left_source, right_dest] = cart_comm.shifted_ranks(1, 1);
   auto [right_source, left_dest] = cart_comm.shifted_ranks(1, -1);
-  auto [front_source, back_dest] = cart_comm.shifted_ranks(2, 1);
-  auto [back_source, front_dest] = cart_comm.shifted_ranks(2, -1);
 
   size_t time_steps = room_size * 500;
 
@@ -186,16 +103,6 @@ int main(int argc, char **argv) {
       requests.push_back(cart_comm.isend(down_dest, 4, lower_level));
     }
 
-    if (front_dest >= 0) {
-      z_direction front_side(buffer_a, 1);
-      requests.push_back(cart_comm.isend(front_dest, 5, front_side));
-    }
-
-    if (back_dest >= 0) {
-      z_direction back_side(buffer_a, chunk_size);
-      requests.push_back(cart_comm.isend(back_dest, 6, back_side));
-    }
-
     // Receive last column from right neighbor.
     if (right_source >= 0) {
       x_direction right_side(buffer_a, chunk_size + 1);
@@ -220,32 +127,21 @@ int main(int argc, char **argv) {
       cart_comm.recv(up_source, 4, upper_level);
     }
 
-    if (back_source >= 0) {
-      z_direction back_side(buffer_a, chunk_size + 1);
-      cart_comm.recv(back_source, 5, back_side);
-    }
-
-    if (front_source >= 0) {
-      z_direction front_side(buffer_a, 0);
-      cart_comm.recv(front_source, 6, front_side);
-    }
-
     mpi::wait_all(begin(requests), end(requests));
 
     for (size_t y = 1; y < chunk_size + 1; y++) {
       for (size_t x = 1; x < chunk_size + 1; x++) {
-        for (size_t z = 1; z < chunk_size + 1; z++) {
+        for (size_t z = 0; z < room_size; z++) {
           size_t global_x = rank_x * chunk_size + x - 1;
           size_t global_y = rank_y * chunk_size + y - 1;
-          size_t global_z = rank_z * chunk_size + z - 1;
 
-          // The center stays constant (the heat is still on).
-          if (rank == source_rank && (y == chunk_source_y && x == chunk_source_x && z == chunk_source_z)) {
+         // The center stays constant (the heat is still on).
+          if (rank == source_rank && y == chunk_source_y && x == chunk_source_x && z == source_z) {
             buffer_b[y][x][z] = buffer_a[y][x][z];
             continue;
           }
 
-          if (global_y >= room_size || global_x >= room_size || global_z >= room_size) {
+          if (global_x >= room_size || global_y >= room_size) {
             continue;
           }
 
@@ -256,8 +152,8 @@ int main(int argc, char **argv) {
           bool last_x = global_x >= room_size - 1;
           bool first_y = global_y == 0;
           bool last_y = global_y >= room_size - 1;
-          bool first_z = global_z == 0;
-          bool last_z = global_z >= room_size - 1;
+          bool first_z = z == 0;
+          bool last_z = z >= room_size - 1;
 
           // Get temperatures of adjacent cells.
           float temp_left = first_x ? temp_current : buffer_a[y][x - 1][z];
@@ -276,16 +172,19 @@ int main(int argc, char **argv) {
     swap(buffer_a, buffer_b);
   }
 
-  collector send_buffer(buffer_a, chunk_size, rank_x, rank_y, rank_z, false, room_size);
+  collector send_buffer(buffer_a, chunk_size, chunk_size, room_size, rank_x, rank_y, 0, false, room_size);
+
   auto request = cart_comm.isend(0, 7, send_buffer);
 
   if (rank == 0) {
     vector<vector<vector<float>>> buffer_c(room_size, vector<vector<float>>(room_size, vector<float>(room_size, 273.0)));
 
     for (size_t r = 0; r < max_rank; r++) {
-      collector receive_buffer(buffer_c, chunk_size, 0, 0, 0, true, room_size);
+      collector receive_buffer(buffer_c, chunk_size, chunk_size, room_size, 0, 0, 0, true, room_size);
       cart_comm.recv(r, 7, receive_buffer);
     }
+
+    request.wait();
 
     print_temperature(buffer_c);
 
@@ -304,9 +203,9 @@ int main(int argc, char **argv) {
     }
 
     cout << "Verification: OK" << endl;
+  } else {
+    request.wait();
   }
-
-  request.wait();
 
   return EXIT_SUCCESS;
 }

@@ -103,9 +103,9 @@ class collector {
           }
 
           if (deserialize) {
-            ar & matrix[start_y * height + y][start_x * width + x][start_z * depth + z];
+            ar & matrix[start_y * height + y][start_x * width + x][z];
           } else {
-            ar & matrix[y + 1][x + 1][z + 1];
+            ar & matrix[y + 1][x + 1][z];
           }
         }
       }
@@ -113,6 +113,6 @@ class collector {
   }
 
   public:
-    collector(vector<vector<vector<float>>>& _matrix, size_t _chunk_size, size_t _x, size_t _y, size_t _z, bool _deserialize, size_t _room_size)
-      : matrix(_matrix), deserialize(_deserialize), start_x(_x), start_y(_y), start_z(_z), height(_chunk_size), width(_chunk_size), depth(_chunk_size), room_size(_room_size) {}
+    collector(vector<vector<vector<float>>>& _matrix, size_t _height, size_t _width, size_t _depth, size_t _x, size_t _y, size_t _z, bool _deserialize, size_t _room_size)
+      : matrix(_matrix), deserialize(_deserialize), start_x(_x), start_y(_y), start_z(_z), height(_height), width(_width), depth(_depth), room_size(_room_size) {}
 };
