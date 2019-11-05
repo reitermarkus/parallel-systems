@@ -1,86 +1,9 @@
 #include "heat_stencil_3d.hpp"
-#include "heat_stencil_3d_cube_serialize.hpp"
+#include "heat_stencil_3d_serialize.hpp"
 #include "../../shared/parse_ull.hpp"
 #include "../../shared/boost.hpp"
 #include "../../shared/vector.hpp"
 
-vector<float> flatten_x_direction(vector<vector<vector<float>>>& buffer, size_t x) {
-  auto height = buffer.size();
-  auto depth = buffer[0][0].size();
-
-  vector<float> flattened(height * depth);
-
-  for (size_t y = 0; y < height; y++) {
-    for (size_t z = 0; z < depth; z++) {
-      flattened[y * depth + z] = buffer[y][x][z];
-    }
-  }
-
-  return flattened;
-}
-
-vector<float> flatten_y_direction(const vector<vector<vector<float>>>& buffer, size_t y) {
-  auto width = buffer[0].size();
-  auto depth = buffer[0][0].size();
-
-  vector<float> flattened(width * depth);
-
-  for (size_t x = 0; x < width; x++) {
-    for (size_t z = 0; z < depth; z++) {
-      flattened[x * depth + z] = buffer[y][x][z];
-    }
-  }
-
-  return flattened;
-}
-
-void deflatten_x_direction(const vector<float>& flattened, vector<vector<vector<float>>>& buffer, size_t x) {
-  auto height = buffer.size();
-  auto depth = buffer[0][0].size();
-
-  for (size_t y = 0; y < height; y++) {
-    for (size_t z = 0; z < depth; z++) {
-      buffer[y][x][z] = flattened[y * depth + z];
-    }
-  }
-}
-
-void deflatten_y_direction(const vector<float>& flattened, vector<vector<vector<float>>>& buffer, size_t y) {
-  auto width = buffer[0].size();
-  auto depth = buffer[0][0].size();
-
-  for (size_t x = 0; x < width; x++) {
-    for (size_t z = 0; z < depth; z++) {
-      buffer[y][x][z] = flattened[x * depth + z];
-    }
-  }
-}
-
-vector<float> flatten_z_direction(const vector<vector<vector<float>>>& buffer, size_t z) {
-  auto height = buffer.size();
-  auto width = buffer[0].size();
-
-  vector<float> flattened(height * width);
-
-  for (size_t y = 0; y < height; y++) {
-    for (size_t x = 0; x < width; x++) {
-      flattened[y * width + x] = buffer[y][x][z];
-    }
-  }
-
-  return flattened;
-}
-
-void deflatten_z_direction(const vector<float>& flattened, vector<vector<vector<float>>>& buffer, size_t z) {
-  auto height = buffer.size();
-  auto width = buffer[0].size();
-
-  for (size_t y = 0; y < height; y++) {
-    for (size_t x = 0; x < width; x++) {
-      buffer[y][x][z] = flattened[y * width + x];
-    }
-  }
-}
 
 int main(int argc, char **argv) {
   size_t room_size = 50;
@@ -276,14 +199,31 @@ int main(int argc, char **argv) {
     swap(buffer_a, buffer_b);
   }
 
-  collector send_buffer(buffer_a, chunk_size, rank_x, rank_y, rank_z, false, room_size);
+  auto effective_height = [&](size_t r_y) {
+    return (r_y + 1) * chunk_size > room_size ? room_size % chunk_size : chunk_size;
+  };
+
+  auto effective_width = [&](size_t r_x) {
+    return (r_x + 1) * chunk_size > room_size ? room_size % chunk_size : chunk_size;
+  };
+
+  auto effective_depth = [&](size_t r_z) {
+    return (r_z + 1) * chunk_size > room_size ? room_size % chunk_size : chunk_size;
+  };
+
+  collector send_buffer(buffer_a, effective_height(rank_y), effective_width(rank_x), effective_depth(rank_z), 1, 1, 1);
   auto request = cart_comm.isend(0, 7, send_buffer);
 
   if (rank == 0) {
     vector<vector<vector<float>>> buffer_c(room_size, vector<vector<float>>(room_size, vector<float>(room_size, 273.0)));
 
     for (size_t r = 0; r < max_rank; r++) {
-      collector receive_buffer(buffer_c, chunk_size, 0, 0, 0, true, room_size);
+      auto r_coords = cart_comm.coordinates(r);
+      auto r_y = r_coords[0];
+      auto r_x = r_coords[1];
+      auto r_z = r_coords[2];
+
+      collector receive_buffer(buffer_c, effective_height(r_y), effective_width(r_x), effective_depth(r_z), r_y * chunk_size, r_x * chunk_size, r_z * chunk_size);
       cart_comm.recv(r, 7, receive_buffer);
     }
 

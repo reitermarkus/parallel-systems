@@ -1,5 +1,5 @@
 #include "heat_stencil_3d.hpp"
-#include "heat_stencil_3d_slab_serialize.hpp"
+#include "heat_stencil_3d_serialize.hpp"
 #include "../../shared/parse_ull.hpp"
 #include "../../shared/boost.hpp"
 #include "../../shared/vector.hpp"
@@ -140,7 +140,11 @@ int main(int argc, char **argv) {
     swap(buffer_a, buffer_b);
   }
 
-  collector send_buffer(buffer_a, chunk_size, room_size, room_size, 0, rank_y, 0, false, room_size);
+  auto effective_height = [&](size_t r_y) {
+    return (r_y + 1) * chunk_size > room_size ? room_size % chunk_size : chunk_size;
+  };
+
+  collector send_buffer(buffer_a, effective_height(rank_y), room_size, room_size, 1, 0, 0);
 
   auto request = cart_comm.isend(0, 7, send_buffer);
 
@@ -148,7 +152,10 @@ int main(int argc, char **argv) {
     vector<vector<vector<float>>> buffer_c(room_size, vector<vector<float>>(room_size, vector<float>(room_size, 273.0)));
 
     for (size_t r = 0; r < max_rank; r++) {
-      collector receive_buffer(buffer_c, chunk_size, room_size, room_size, 0, 0, 0, true, room_size);
+      auto r_coords = cart_comm.coordinates(r);
+      auto r_y = r_coords[0];
+
+      collector receive_buffer(buffer_c, effective_height(r_y), room_size, room_size, r_y * chunk_size, 0, 0);
       cart_comm.recv(r, 7, receive_buffer);
     }
 
