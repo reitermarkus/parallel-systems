@@ -38,6 +38,27 @@
 | 8     | 100        | 65054       | 4,60    | 0,58       |
 | 16    | 100        | 65352       | 4.57    | 0,29       |
 
+## Exercise 1 - heat stencil 3D slabs
+
+### Results for room size 50
+
+| slots | time steps | result (ms) | speedup | efficiency |
+|-------|------------|-------------| ------- | ---------- |
+| 1     | 200        | 13177       |         |            |
+| 2     | 200        | 9569        | 1,37    | 0,69       |
+| 4     | 200        | 6031        | 2,18    | 0,55       |
+| 8     | 200        | 4055        | 3,24    | 0,41       |
+
+### Results for room size 96
+
+| slots | time steps | result (ms) | speedup | efficiency |
+|-------|------------|-------------| ------- | ---------- |
+| 1     | 100        | 130029      |         |            |
+| 4     | 100        | 32664       | 3,98    | 0,99       |
+| 8     | 100        | 19061       | 6,82    | 0,85       |
+| 16    | 100        | 15981       | 8,14    | 0,51       |
+| 32    | 100        | 13029       | 9,98    | 0,31       |
+
 # Local Benchmarks
 
 | Variant            | Slots | Time  | Problem Size | Time Steps Factor | Notes    |
