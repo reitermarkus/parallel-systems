@@ -59,6 +59,28 @@
 | 16    | 100        | 15981       | 8,14    | 0,51       |
 | 32    | 100        | 13029       | 9,98    | 0,31       |
 
+## Exercise 1 - heat stencil 3D poles
+
+### Results for room size 50
+
+| slots | time steps | result (ms) | speedup | efficiency |
+|-------|------------|-------------| ------- | ---------- |
+| 1     | 200        | 13177       |         |            |
+| 2     | 200        | 18098       | 0,73    | 0,36       |
+| 4     | 200        | 5720        | 2,30    | 0,58       |
+| 8     | 200        | 5764        | 2,29    | 0,29       |
+| 16    | 200        | 4566        | 3,24    | 0,41       |
+
+### Results for room size 96
+
+| slots | time steps | result (ms) | speedup | efficiency |
+|-------|------------|-------------| ------- | ---------- |
+| 1     | 100        | 130029      |         |            |
+| 4     | 100        | 32804       | 3,96    | 0,99       |
+| 8     | 100        | 32669       | 3,98    | 0,50       |
+| 16    | 100        | 16200       | 8,03    | 0,50       |
+| 32    | 100        | 13178       | 9,87    | 0,31       |
+
 # Local Benchmarks
 
 | Variant            | Slots | Time  | Problem Size | Time Steps Factor | Notes    |
