@@ -81,19 +81,26 @@
 | 16    | 100        | 16200       | 8,03    | 0,50       |
 | 32    | 100        | 13178       | 9,87    | 0,31       |
 
+![](images/speedup-room-size-96.svg)
+![](images/speedup-room-size-50.svg)
+![](images/efficiency-room-size-96.svg)
+![](images/efficiency-room-size-50.svg)
+
 # Local Benchmarks
 
 | Variant            | Slots | Time  | Problem Size | Time Steps Factor | Notes    |
 |--------------------|-------|-------|--------------|-------------------|----------|
-| slab blocking      |     8 | 53.78 | 100          | 500               |          |
-| slab blocking      |    16 | 66.21 | 100          | 500               | segfault |
-| slab non-blocking  |     8 | 44.75 | 100          | 500               |          |
-| slab non-blocking  |    16 | 51.56 | 100          | 500               | segfault |
-| cube blocking      |     8 | 47.38 | 100          | 500               |          |
-| cube blocking      |    16 | 56.00 | 100          | 500               |          |
-| cube non-blocking  |     8 | 43.62 | 100          | 500               |          |
-| cube non-blocking  |    16 | 48.82 | 100          | 500               |          |
-| pole blocking      |     8 | 71.22 | 100          | 500               |          |
-| pole blocking      |    16 | 48.25 | 100          | 500               |          |
-| pole non-blocking  |     8 | 70.72 | 100          | 500               |          |
-| pole non-blocking  |    16 | 39.51 | 100          | 500               |          |
+| slab blocking      |     8 | 53,78 | 100          | 500               |          |
+| slab blocking      |    16 | 66,21 | 100          | 500               | segfault |
+| slab non-blocking  |     8 | 44,75 | 100          | 500               |          |
+| slab non-blocking  |    16 | 51,56 | 100          | 500               | segfault |
+| cube blocking      |     8 | 47,38 | 100          | 500               |          |
+| cube blocking      |    16 | 56,00 | 100          | 500               |          |
+| cube non-blocking  |     8 | 43,62 | 100          | 500               |          |
+| cube non-blocking  |    16 | 48,82 | 100          | 500               |          |
+| pole blocking      |     8 | 71,22 | 100          | 500               |          |
+| pole blocking      |    16 | 48,25 | 100          | 500               |          |
+| pole non-blocking  |     8 | 70,72 | 100          | 500               |          |
+| pole non-blocking  |    16 | 39,51 | 100          | 500               |          |
+
+![](images/blocking-vs-nonblocking.svg)
