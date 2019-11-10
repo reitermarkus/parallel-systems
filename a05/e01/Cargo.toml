@@ -1,0 +1,13 @@
+[package]
+name = "nbody"
+version = "0.1.0"
+authors = ["Markus Reiter <me@reitermark.us>"]
+edition = "2018"
+
+[[bin]]
+name = "nbody"
+path = "nbody.rs"
+
+[dependencies]
+num = "0.2.0"
+rand = "0.7.2"
