@@ -41,22 +41,22 @@ fn visualize(particles: &[Particle]) {
   let width = 120;
   let height = 40;
 
-  let mut screen = vec![vec![' '; width]; height];
+  let mut screen = vec![vec![0; width]; height];
 
   for p in particles {
-    let mut x = (p.position.0 * (width - 1) as f32 + width as f32 / 2.0) as isize;
-    let mut y = (p.position.1 * (height - 1) as f32 + height as f32 / 2.0) as isize;
+    let x = (p.position.0 * (width - 1) as f32 + width as f32 / 2.0) as isize;
+    let y = (p.position.1 * (height - 1) as f32 + height as f32 / 2.0) as isize;
 
     if x >= width as isize || y >= height as isize || x < 0 || y < 0 {
       continue;
     }
 
-    screen[y as usize][x as usize] = '*';
+    screen[y as usize][x as usize] += 1;
   }
 
   print!("┌");
 
-  for x in 0..width {
+  for _ in 0..width {
     print!("─");
   }
 
@@ -65,9 +65,15 @@ fn visualize(particles: &[Particle]) {
   for y in 0..height {
     print!("│");
 
-
     for x in 0..width {
-      print!("{}", screen[y][x]);
+      match screen[y][x] {
+        0 => print!(" "),
+        1 => print!("·"),
+        2 => print!("✦"),
+        3 => print!("⭑"),
+        4 => print!("✸"),
+        _ => print!("⬣"),
+      }
     }
 
     println!("│");
@@ -75,7 +81,7 @@ fn visualize(particles: &[Particle]) {
 
   print!("└");
 
-  for x in 0..width {
+  for _ in 0..width {
     print!("─");
   }
 
@@ -87,33 +93,42 @@ fn main() {
     .map(|n| n.parse().expect("Failed to parse argument"))
     .unwrap_or(1_000);
 
-  let dt = 0.001;
+  let dt = 0.0001;
 
-  let time_steps = 25;
+  let time_steps = 1_000;
 
   let mut particles = (0..samples).map(|_| generate_particle()).collect::<Vec<_>>();
 
   visualize(&particles);
 
   for t in 0..time_steps {
-    let mut forces = vec![0.0; samples];
-
     for i in 0..samples {
-      for j in 0..samples {
-        if i == j { continue }
+      for j in (i + 1)..samples {
+        let dx = particles[i].position.0 - particles[j].position.0;
+        let dy = particles[i].position.1 - particles[j].position.1;
 
-        forces[i] += calculate_force(&particles[i], &particles[j]);
+        let force = calculate_force(&particles[i], &particles[j]);
+
+        let velocity_i = force * dt / particles[j].mass;
+        let velocity_j = force * dt / particles[i].mass;
+
+        particles[i].velocity = (
+          particles[i].velocity.0 - dx * velocity_j,
+          particles[i].velocity.1 - dy * velocity_j,
+        );
+        particles[j].velocity = (
+          particles[j].velocity.0 + dx * velocity_i,
+          particles[j].velocity.1 + dy * velocity_i,
+        );
       }
+
+      particles[i].position = (
+        particles[i].position.0 + particles[i].velocity.0 * dt,
+        particles[i].position.1 + particles[i].velocity.1 * dt,
+      );
     }
 
-    for i in 0..samples {
-      let velocity = forces[i] * dt / particles[i].mass;
-
-      particles[i].velocity = (particles[i].velocity.0 + velocity, particles[i].velocity.1 + velocity);
-      particles[i].position = (particles[i].position.0 + particles[i].velocity.0 * dt, particles[i].position.1 + particles[i].velocity.1 * dt);
-    }
-
-    sleep(Duration::from_millis(250));
+    sleep(Duration::from_millis(50));
     println!("t = {}", t);
     visualize(&particles);
   }
