@@ -4,6 +4,7 @@
 #include <random>
 #include <thread>
 #include <vector>
+#include "assert.h"
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -27,15 +28,15 @@ struct Particle {
   }
 };
 
-void visualize(vector<Particle>& particles) {
+void visualize(const vector<Particle>& particles) {
   size_t width = 120;
   size_t height = 40;
 
   vector<vector<size_t>> screen(height, vector<size_t>(width, 0));
 
   for (auto p: particles) {
-    ssize_t x = (p.position.first * static_cast<float>(width - 1) + static_cast<float>(width) / 2.0);
-    ssize_t y = (p.position.second * static_cast<float>(height - 1) + static_cast<float>(height) / 2.0);
+    ssize_t x = p.position.first * (width - 1) + width / 2.0;
+    ssize_t y = p.position.second * (height - 1) + height / 2.0;
 
     if (x >= static_cast<ssize_t>(width) || y >= static_cast<ssize_t>(height) || x < 0 || y < 0) {
       continue;
@@ -78,23 +79,26 @@ void visualize(vector<Particle>& particles) {
   cout << "┘" << endl;
 }
 
-void advance(vector<Particle>& particles, float dt) {
+void advance(vector<Particle>& particles, const float dt) {
   for (size_t i = 0; i < particles.size(); i++) {
     for (size_t j = i + 1; j < particles.size(); j++) {
       auto dx = particles[i].position.first - particles[j].position.first;
       auto dy = particles[i].position.second - particles[j].position.second;
 
       auto radius = sqrt(powf(dx, 2.0) + powf(dy, 2.0));
-      // debug_assert!(radius > 0.first);
+      assert(radius > 0.0);
+
       auto force = G * (particles[i].mass * particles[i].mass) / powf(radius, 2.0);
 
-      auto velocity_i = force * dt / particles[j].mass;
       auto velocity_j = force * dt / particles[i].mass;
 
       particles[i].velocity = make_pair(
         particles[i].velocity.first - dx * velocity_j,
         particles[i].velocity.second - dy * velocity_j
       );
+
+      auto velocity_i = force * dt / particles[j].mass;
+
       particles[j].velocity = make_pair(
         particles[j].velocity.first + dx * velocity_i,
         particles[j].velocity.second + dy * velocity_i
