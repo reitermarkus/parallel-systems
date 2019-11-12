@@ -88,7 +88,7 @@ void advance(vector<Particle>& particles, const float dt) {
       auto radius = sqrt(powf(dx, 2.0) + powf(dy, 2.0));
       assert(radius > 0.0);
 
-      auto force = G * (particles[i].mass * particles[i].mass) / powf(radius, 2.0);
+      auto force = G * (particles[i].mass * particles[j].mass) / powf(radius, 2.0);
 
       auto velocity_j = force * dt / particles[i].mass;
 
