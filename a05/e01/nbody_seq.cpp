@@ -1,6 +1,6 @@
 #include "../../shared/nbody.hpp"
 
-void advance(vector<Particle>& particles, const float dt) {
+inline void advance(vector<Particle>& particles, const float dt) {
   for (size_t i = 0; i < particles.size(); i++) {
     for (size_t j = i + 1; j < particles.size(); j++) {
       auto dx = particles[i].position.first - particles[j].position.first;
@@ -14,22 +14,16 @@ void advance(vector<Particle>& particles, const float dt) {
       auto force = G / powf(radius, 2.0) * dt;
 
       auto velocity_j = force * particles[j].mass;
-      particles[i].velocity = make_pair(
-        particles[i].velocity.first - dx * velocity_j,
-        particles[i].velocity.second - dy * velocity_j
-      );
+      particles[i].velocity.first -= dx * velocity_j;
+      particles[i].velocity.second -= dy * velocity_j;
 
       auto velocity_i = force * particles[i].mass;
-      particles[j].velocity = make_pair(
-        particles[j].velocity.first + dx * velocity_i,
-        particles[j].velocity.second + dy * velocity_i
-      );
+      particles[j].velocity.first += dx * velocity_i;
+      particles[j].velocity.second += dy * velocity_i;
     }
 
-    particles[i].position = make_pair(
-      particles[i].position.first + particles[i].velocity.first * dt,
-      particles[i].position.second + particles[i].velocity.second * dt
-    );
+    particles[i].position.first += particles[i].velocity.first * dt;
+    particles[i].position.second += particles[i].velocity.second * dt;
   }
 }
 
