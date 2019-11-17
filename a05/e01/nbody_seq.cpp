@@ -86,19 +86,19 @@ void advance(vector<Particle>& particles, const float dt) {
       auto dy = particles[i].position.second - particles[j].position.second;
 
       auto radius = sqrt(powf(dx, 2.0) + powf(dy, 2.0));
-      assert(radius > 0.0);
+      #ifdef DEBUG
+        assert(radius > 0.0);
+      #endif
 
       auto force = G / powf(radius, 2.0) * dt;
 
       auto velocity_j = force * particles[j].mass;
-
       particles[i].velocity = make_pair(
         particles[i].velocity.first - dx * velocity_j,
         particles[i].velocity.second - dy * velocity_j
       );
 
       auto velocity_i = force * particles[i].mass;
-
       particles[j].velocity = make_pair(
         particles[j].velocity.first + dx * velocity_i,
         particles[j].velocity.second + dy * velocity_i

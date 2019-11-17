@@ -86,13 +86,13 @@ fn advance(particles: &mut [Particle], dt: f32) {
       debug_assert!(radius > 0.0);
       let force = G / radius.powf(2.0) * dt;
 
-      let velocity_i = force * particles[i].mass;
       let velocity_j = force * particles[j].mass;
-
       particles[i].velocity = (
         particles[i].velocity.0 - dx * velocity_j,
         particles[i].velocity.1 - dy * velocity_j,
       );
+
+      let velocity_i = force * particles[i].mass;
       particles[j].velocity = (
         particles[j].velocity.0 + dx * velocity_i,
         particles[j].velocity.1 + dy * velocity_i,
