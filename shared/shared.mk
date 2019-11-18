@@ -13,6 +13,10 @@ ifneq ("$(wildcard $(HOME)/.local/lib)", "")
 	LDFLAGS += -L"$(HOME)/.local/lib" -Wl,-rpath,"$(HOME)/.local/lib"
 endif
 
+ifeq ($(DEBUG),1)
+  CPPFLAGS += -DDEBUG
+endif
+
 TARGETS ?= $(sort $(patsubst %.cpp,%,$(wildcard *_seq.cpp *_mpi.cpp)))
 
 .PHONY: all

@@ -1,6 +1,8 @@
+#include <random>
+
 #include "../../shared/nbody.hpp"
 
-inline void advance(vector<Particle>& particles, const float dt) {
+inline void advance(vector<Particle>& particles, const float dt, vector<float>& velocities_x, vector<float>& velocities_y) {
   for (size_t i = 0; i < particles.size(); i++) {
     for (size_t j = i + 1; j < particles.size(); j++) {
       auto dx = particles[i].position.first - particles[j].position.first;
@@ -14,16 +16,19 @@ inline void advance(vector<Particle>& particles, const float dt) {
       auto force = G / powf(radius, 2.0) * dt;
 
       auto velocity_j = force * particles[j].mass;
-      particles[i].velocity.first -= dx * velocity_j;
-      particles[i].velocity.second -= dy * velocity_j;
+      velocities_x[i] -= dx * velocity_j;
+      velocities_y[i] -= dy * velocity_j;
 
       auto velocity_i = force * particles[i].mass;
-      particles[j].velocity.first += dx * velocity_i;
-      particles[j].velocity.second += dy * velocity_i;
+      velocities_x[j] += dx * velocity_i;
+      velocities_y[j] += dy * velocity_i;
     }
+  }
 
-    particles[i].position.first += particles[i].velocity.first * dt;
-    particles[i].position.second += particles[i].velocity.second * dt;
+
+  for (size_t i = 0; i < particles.size(); i++) {
+    particles[i].position.first += velocities_x[i] * dt;
+    particles[i].position.second += velocities_y[i] * dt;
   }
 }
 
@@ -38,20 +43,35 @@ int main(int argc, char **argv) {
 
   size_t time_steps = 1000;
 
-  vector<Particle> particles(samples);
+  #ifdef DEBUG
+    mt19937 gen(1);
+  #else
+    random_device rd;
+    mt19937 gen(rd());
+  #endif
 
-  for (size_t i = 0; i < particles.size(); i++) {
-    particles[i] = Particle();
+  vector<Particle> particles;
+  particles.reserve(samples);
+
+  for (size_t i = 0; i < samples; i++) {
+    particles.emplace_back(gen);
   }
 
-  visualize(particles);
+  #ifdef DEBUG
+    visualize(particles);
+  #endif
+
+  vector<float> velocities_x(particles.size(), 0.0);
+  vector<float> velocities_y(particles.size(), 0.0);
 
   for (size_t t = 0; t < time_steps; t++) {
-    advance(particles, dt);
+    advance(particles, dt, velocities_x, velocities_y);
 
-    this_thread::sleep_for(50ms);
-    cout << "t = " << t << endl;
-    visualize(particles);
+    #ifdef DEBUG
+      this_thread::sleep_for(50ms);
+      cout << "t = " << t << endl;
+      visualize(particles);
+    #endif
   }
 
   return EXIT_SUCCESS;

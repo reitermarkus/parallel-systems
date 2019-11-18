@@ -16,17 +16,19 @@ struct Particle {
   pair<float, float> velocity;
   float mass;
 
-  Particle() {
-    random_device rd;
-    mt19937 gen(rd());
+  Particle(mt19937& gen) {
     uniform_real_distribution<> dis1(-1.0, 1.0);
     uniform_real_distribution<> dis2(0.01, 10.0);
 
     position = make_pair(dis1(gen), dis1(gen));
-    velocity = make_pair(dis1(gen), dis1(gen));
     mass = dis2(gen);
   }
 };
+
+std::ostream& operator<< (std::ostream& out, const Particle& p) {
+  out << "Particle { (" << p.position.first << ", " << p.position.second << "), (" << p.velocity.first << ", " << p.velocity.second << "), " << p.mass << "}";
+  return out;
+}
 
 inline void visualize(const vector<Particle>& particles) {
   size_t width = 120;

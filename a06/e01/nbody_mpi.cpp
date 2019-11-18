@@ -1,3 +1,5 @@
+#include <random>
+
 #include "../../shared/boost.hpp"
 #include "../../shared/nbody.hpp"
 
@@ -18,38 +20,43 @@ int main(int argc, char **argv) {
   size_t size = world.size();
   size_t rank = world.rank();
 
-  size_t dim = size;
+  size_t chunk_size = (samples + size - 1) / size;
 
-  vector<mpi::cartesian_dimension> dimensions = { mpi::cartesian_dimension(dim) };
-  mpi::cartesian_topology topology(dimensions);
-  mpi::cartesian_communicator cart_comm(world, topology);
+  #ifdef DEBUG
+    mt19937 gen(1);
+  #else
+    random_device rd;
+    mt19937 gen(rd());
+  #endif
 
-  size_t chunk_size = (samples + dim - 1) / dim;
+  vector<Particle> particles;
+  particles.reserve(samples);
 
-  auto [left, right] = cart_comm.shifted_ranks(0, 1);
-
-  vector<Particle> particles(samples);
-
-  for (size_t i = 0; i < particles.size(); i++) {
-    particles[i] = Particle();
+  for (size_t i = 0; i < samples; i++) {
+    particles.emplace_back(gen);
   }
 
-  visualize(particles);
+  #ifdef DEBUG
+    if (rank == 0) {
+      visualize(particles);
+    }
+  #endif
 
-  size_t max_i = clamp<size_t>(rank * chunk_size + chunk_size, 0, samples);
+  size_t max_i = clamp<size_t>(rank * chunk_size + chunk_size, 0, particles.size());
+
+  vector<float> local_velocity_offset_x(samples, 0.0);
+  vector<float> local_velocity_offset_y(samples, 0.0);
+
+  vector<float> velocity_offset_x(samples);
+  vector<float> velocity_offset_y(samples);
 
   for (size_t t = 0; t < time_steps; t++) {
-    vector<float> velocity_offset_x(samples, 0.0);
-    vector<float> velocity_offset_y(samples, 0.0);
-
-    for (size_t i = rank * chunk_size; i < particles.size(); i++) {
+    for (size_t i = rank * chunk_size; i < max_i; i++) {
       for (size_t j = i + 1; j < particles.size(); j++) {
         auto dx = particles[i].position.first - particles[j].position.first;
         auto dy = particles[i].position.second - particles[j].position.second;
 
         auto radius = sqrt(powf(dx, 2.0) + powf(dy, 2.0));
-
-        #define DEBUG
         #ifdef DEBUG
           assert(radius > 0.0);
         #endif
@@ -57,37 +64,32 @@ int main(int argc, char **argv) {
         auto force = G / powf(radius, 2.0) * dt;
 
         auto velocity_j = force * particles[j].mass;
-        velocity_offset_x[i] -= dx * velocity_j;
-        velocity_offset_y[i] -= dy * velocity_j;
+        local_velocity_offset_x[i] -= dx * velocity_j;
+        local_velocity_offset_y[i] -= dy * velocity_j;
 
         auto velocity_i = force * particles[i].mass;
-        velocity_offset_x[i] += dx * velocity_i;
-        velocity_offset_y[i] += dy * velocity_i;
+        local_velocity_offset_x[j] += dx * velocity_i;
+        local_velocity_offset_y[j] += dy * velocity_i;
       }
     }
 
-    vector<float> received_velocity_offset_x(samples);
-    mpi::all_reduce(cart_comm, &velocity_offset_x[0], samples, &received_velocity_offset_x[0], plus<float>());
-    vector<float> received_velocity_offset_y(samples);
-    mpi::all_reduce(cart_comm, &velocity_offset_y[0], samples, &received_velocity_offset_y[0], plus<float>());
+    mpi::all_reduce(world, &local_velocity_offset_x[0], samples, &velocity_offset_x[0], plus<float>());
+    mpi::all_reduce(world, &local_velocity_offset_y[0], samples, &velocity_offset_y[0], plus<float>());
 
     for (size_t i = 0; i < particles.size(); i++) {
-      particles[i].velocity = make_pair(
-        particles[i].velocity.first + received_velocity_offset_x[i],
-        particles[i].velocity.second + received_velocity_offset_y[i]
-      );
-
       particles[i].position = make_pair(
-        particles[i].position.first + particles[i].velocity.first * dt,
-        particles[i].position.second + particles[i].velocity.second * dt
+        particles[i].position.first + velocity_offset_x[i] * dt,
+        particles[i].position.second + velocity_offset_y[i] * dt
       );
     }
 
-    if (rank == 0) {
-      this_thread::sleep_for(50ms);
-      cout << "t = " << t << endl;
-      visualize(particles);
-    }
+    #ifdef DEBUG
+      if (rank == 0) {
+        this_thread::sleep_for(50ms);
+        cout << "t = " << t << endl;
+        visualize(particles);
+      }
+    #endif
   }
 
   return EXIT_SUCCESS;
