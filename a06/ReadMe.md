@@ -38,6 +38,9 @@
 | 32    | 4000       | 11186       | 11,10   | 0,35       |
 | 64    | 4000       | 9188        | 13,51   | 0,21       |
 
+![](runtime.svg)
+![](speedup.svg)
+
 ### Local Benchmarks
 
 | slots | time steps | samples | runtime (s) |
