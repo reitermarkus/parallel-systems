@@ -77,10 +77,8 @@ int main(int argc, char **argv) {
     mpi::all_reduce(world, &local_velocity_offset_y[0], samples, &velocity_offset_y[0], plus<float>());
 
     for (size_t i = 0; i < particles.size(); i++) {
-      particles[i].position = make_pair(
-        particles[i].position.first + velocity_offset_x[i] * dt,
-        particles[i].position.second + velocity_offset_y[i] * dt
-      );
+      particles[i].position.first += velocity_offset_x[i] * dt;
+      particles[i].position.second += velocity_offset_y[i] * dt;
     }
 
     #ifdef DEBUG
