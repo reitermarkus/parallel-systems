@@ -3,7 +3,7 @@
 #include "../shared/nbody.hpp"
 
 inline void advance(vector<Particle>& particles, const float dt, vector<float>& velocities_x, vector<float>& velocities_y) {
-  #pragma omp parallel for num_threads(THREADS) 
+  #pragma omp parallel for num_threads(THREADS)
   for (size_t i = 0; i < particles.size(); i++) {
     for (size_t j = i + 1; j < particles.size(); j++) {
       auto dx = particles[i].position.first - particles[j].position.first;
@@ -26,14 +26,14 @@ inline void advance(vector<Particle>& particles, const float dt, vector<float>& 
     }
   }
 
-
+  #pragma omp parallel for num_threads(THREADS)
   for (size_t i = 0; i < particles.size(); i++) {
     particles[i].position.first += velocities_x[i] * dt;
     particles[i].position.second += velocities_y[i] * dt;
   }
 }
 
-int main(int argc, char **argv) { 
+int main(int argc, char **argv) {
   size_t samples = 1000;
 
   if (argc > 1) {
