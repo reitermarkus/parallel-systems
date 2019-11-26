@@ -11,13 +11,16 @@ ifeq ($(OS), Darwin)
   ifeq ($(shell brew ls libomp &>/dev/null; echo $$?), 0)
     LIBOMP_PREFIX = $(shell brew --prefix libomp)
     OPENMP_CPPFLAGS += -I$(LIBOMP_PREFIX)/include
-    OPENMP_LDFLAGS += -L$(LIBOMP_PREFIX)/lib -XPreprocessor
+    OPENMP_LDFLAGS += -L$(LIBOMP_PREFIX)/lib -lomp
   else
     $(error "OpenMP is not installed, run `brew install libomp`")
   endif
+else
+  OPENMP_LDFLAGS += -fopenmp
 endif
 
-OPENMP_LDFLAGS += -fopenmp
+OPENMP_CPPFLAGS += -Xpreprocessor -fopenmp
+
 MPI_LDFLAGS += -lboost_mpi -lboost_serialization
 
 ifneq ("$(wildcard $(HOME)/.local/include)", "")
