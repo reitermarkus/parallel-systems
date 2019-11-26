@@ -61,6 +61,17 @@ def mpiexec(executable, env:, n: nil)
   SH
 end
 
+def ompexec(executable, env:)
+  
+  <<~SH
+    #!/usr/bin/env bash
+    set -eou pipefail
+    
+    #{load_env env}
+    time #{executable.shellescape} "${@}"
+  SH
+end
+
 def qsub(executable, *args, mpi_environment: nil, parallel_environment:, slots:, output_file: 'output.log', error_log: 'error.log', name: nil, sync: true, directory: nil)
   qsub_args = []
   qsub_args << '-cwd' if directory
