@@ -1,3 +1,4 @@
+require 'securerandom'
 require 'shellwords'
 
 def windows?
@@ -72,11 +73,15 @@ def ompexec(executable, env:)
   SH
 end
 
-def qsub(executable, *args, mpi_environment: nil, parallel_environment:, slots:, output_file: 'output.log', error_log: 'error.log', name: nil, sync: true, directory: nil)
+def qsub(executable, *args, mpi_environment: nil, parallel_environment:, slots:, output_file: nil, error_log: nil, name: nil, sync: true, directory: nil)
+  id = SecureRandom.hex
+  current_output_file = "output-#{id}.log"
+  current_error_log = "error-#{id}.log"
+
   qsub_args = []
   qsub_args << '-cwd' if directory
-  qsub_args << '-o' << output_file if output_file
-  qsub_args << '-e' << error_log if error_log
+  qsub_args << '-o' << current_output_file
+  qsub_args << '-e' << current_error_log
   qsub_args << '-pe' << parallel_environment << slots
   qsub_args << '-N' << name if name
   qsub_args << '-sync' << 'yes' if sync
@@ -92,7 +97,7 @@ def qsub(executable, *args, mpi_environment: nil, parallel_environment:, slots:,
   qsub = "qsub #{qsub_args.shelljoin}"
 
   script = <<~SH
-    trap 'rm -f #{[*output_file, *error_log].shelljoin}' EXIT
+    trap 'rm #{[current_output_file, current_error_log].shelljoin}' EXIT
 
     exit_status=0
   SH
@@ -109,13 +114,25 @@ def qsub(executable, *args, mpi_environment: nil, parallel_environment:, slots:,
     SH
   end
 
+  if output_file
+    script += <<~SH
+      cp -f #{[current_output_file, output_file].shelljoin}
+    SH
+  end
+
+  if error_log
+    script += <<~SH
+      cp -f #{[current_error_log, error_log].shelljoin}
+    SH
+  end
+
   script += <<~SH
     if [[ $exit_status -eq 0 ]]; then
-      #{output_file ? "cat #{output_file.shellescape}" : ''}
-      #{error_log ? "cat #{error_log.shellescape}" : ''}
+      cat #{current_output_file.shellescape}
+      cat #{current_error_log.shellescape}
       exit 0
     else
-      #{error_log ? "cat #{error_log.shellescape}" : ''}
+      cat #{current_error_log.shellescape}
       exit $exit_status
     fi
   SH
