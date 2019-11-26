@@ -62,13 +62,14 @@ def mpiexec(executable, env:, n: nil)
   SH
 end
 
-def ompexec(executable, env:)
-  
+def ompexec(executable, threads: nil, env:)
+
   <<~SH
     #!/usr/bin/env bash
     set -eou pipefail
-    
+
     #{load_env env}
+    #{threads ? "export OMP_NUM_THREADS='#{threads}'" : ''}
     time #{executable.shellescape} "${@}"
   SH
 end
