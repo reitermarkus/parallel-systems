@@ -54,11 +54,13 @@ int main(int argc, char **argv) {
     // Swap matrices (just pointers, not content).
     swap(buffer_a, buffer_b);
 
-    // Show intermediate step.
-    if (!(t % 1000) && !getenv("CI"))  {
-      cout << "t = " << t << endl;
-      print_temperature(buffer_a);
-    }
+    #ifdef DEBUG
+      // Show intermediate step.
+      if (!(t % 1000) && !getenv("CI"))  {
+        cout << "t = " << t << endl;
+        print_temperature(buffer_a);
+      }
+    #endif
   }
 
   cout << "final" << endl;
