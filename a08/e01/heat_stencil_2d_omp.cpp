@@ -27,8 +27,9 @@ int main(int argc, char **argv) {
   print_temperature(buffer_a);
 
   // Propagate the temperature in each time step.
+  #pragma omp parallel
   for (int t = 0; t < time_steps; t++) {
-    #pragma omp parallel for
+    #pragma omp for
     for (long long i = 0; i < room_size; i++) {
       for (long long j = 0; j < room_size; j++) {
         // The center stays constant (the heat is still on).
@@ -52,13 +53,16 @@ int main(int argc, char **argv) {
     }
 
     // Swap matrices (just pointers, not content).
-    swap(buffer_a, buffer_b);
 
     #ifdef DEBUG
       // Show intermediate step.
-      if (!(t % 1000) && !getenv("CI"))  {
-        cout << "t = " << t << endl;
-        print_temperature(buffer_a);
+      #pragma omp single
+      {
+        swap(buffer_a, buffer_b);
+        if (!(t % 1000) && !getenv("CI"))  {
+          cout << "t = " << t << endl;
+          print_temperature(buffer_a);
+        }
       }
     #endif
   }
