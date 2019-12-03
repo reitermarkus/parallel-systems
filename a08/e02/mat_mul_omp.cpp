@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
 
   auto mat_res = vector<vector<float>>(mat_a.size(), vector<float>(mat_b[0].size()));
 
-  #pragma omp parallel for
+  #pragma omp parallel for collapse(2)
   for (size_t i = 0; i < n; i++) {
     for (size_t j = 0; j < n; j++) {
       float sum = 0;
