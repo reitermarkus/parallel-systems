@@ -23,8 +23,10 @@ int main(int argc, char **argv) {
 
   buffer_a[source_y][source_x] = 273.0 + 60.0;
 
-  cout << "initial" << endl;
-  print_temperature(buffer_a);
+  #ifdef DEBUG
+    cout << "initial" << endl;
+    print_temperature(buffer_a);
+  #endif
 
   // Propagate the temperature in each time step.
   #pragma omp parallel
@@ -67,8 +69,10 @@ int main(int argc, char **argv) {
     }
   }
 
-  cout << "final" << endl;
-  print_temperature(buffer_a);
+  #ifdef DEBUG
+    cout << "final" << endl;
+    print_temperature(buffer_a);
+  #endif
 
   for (auto i = 0; i < room_size; i++) {
     for (auto j = 0; j < room_size; j++) {
