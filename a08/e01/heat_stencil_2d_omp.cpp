@@ -52,19 +52,19 @@ int main(int argc, char **argv) {
       }
     }
 
-    // Swap matrices (just pointers, not content).
+    #pragma omp single
+    {
+      // Swap matrices (just pointers, not content).
+      swap(buffer_a, buffer_b);
 
-    #ifdef DEBUG
-      // Show intermediate step.
-      #pragma omp single
-      {
-        swap(buffer_a, buffer_b);
+      #ifdef DEBUG
+        // Show intermediate step.
         if (!(t % 1000) && !getenv("CI"))  {
           cout << "t = " << t << endl;
           print_temperature(buffer_a);
         }
-      }
-    #endif
+      #endif
+    }
   }
 
   cout << "final" << endl;
