@@ -2,9 +2,11 @@
 name = "mat_mul"
 version = "0.1.0"
 authors = ["Michael Kaltschmid <kaltschmidmichael@gmail.com>"]
+edition = "2018"
 
 [[bin]]
 name = "mat_mul"
 path = "mat_mul.rs"
 
 [dependencies]
+rayon = "1"

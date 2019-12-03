@@ -1,19 +1,96 @@
-fn matrix_multiplication(mat_a : Vec<f32>, mat_b: Vec<f32>, n: usize) -> Vec<f32> {
-  let mut mat_res = vec![0.0; n * n];
+use std::{env, iter::Sum, ops::*};
 
-  for i in 0..n {
-    for j in 0..n {
-      mat_res[i * n + j] = (0..n).fold(0.0, |acc, k| acc + mat_a[i * n + k] * mat_b[k * n + j]);
-    }
-  }
-
-  mat_res
+struct Matrix<T> {
+  rows: usize,
+  columns: usize,
+  data: Vec<T>,
 }
 
-fn matrix_verification(matrix: &Vec<f32>, n: usize) -> bool {
-  for i in 0..n {
-    for j in 0..n {
-      if matrix[i * n + j] != i as f32 * j as f32 {
+impl<T> Matrix<T> where T: Default + Clone {
+  #[inline]
+  pub fn new(rows: usize, columns: usize) -> Self {
+    Self {
+      rows, columns, data: vec![T::default(); rows * columns],
+    }
+  }
+}
+
+impl Matrix<f32> {
+  pub fn i_times_j(rows: usize, columns: usize) -> Self {
+    let mut m = Self::new(rows, columns);
+
+    for i in 0..rows {
+      for j in 0..columns {
+        m[(i, j)] = (i * j) as f32;
+      }
+    }
+
+    m
+  }
+
+  pub fn identity(n: usize) -> Self {
+    let mut m = Self::new(n, n);
+
+    for ij in 0..n {
+      m[(ij, ij)] = 1.0;
+    }
+
+    m
+  }
+}
+
+impl<T> Index<(usize, usize)> for Matrix<T> {
+  type Output = T;
+
+  fn index(&self, i: (usize, usize)) -> &Self::Output {
+    &self.data[i.0 * self.rows + i.1]
+  }
+}
+
+impl<T> IndexMut<(usize, usize)> for Matrix<T> {
+  fn index_mut(&mut self, i: (usize, usize)) -> &mut Self::Output {
+    &mut self.data[i.0 * self.rows + i.1]
+  }
+}
+
+impl<'mul, T, O> Mul for &'mul Matrix<T>
+where
+  T: 'mul,
+  T: Sync,
+  O: Send,
+  &'mul T: Mul<Output = O>,
+  O: Sum,
+{
+  type Output = Matrix<O>;
+
+  fn mul(self, rhs: Self) -> Self::Output {
+    let lhs = self;
+
+    let new_rows = lhs.rows;
+    let new_columns = rhs.columns;
+    assert!(lhs.columns == rhs.rows);
+    let shared_edge = lhs.columns;
+
+    use rayon::prelude::*;
+
+    let data = (0..new_rows).into_par_iter().flat_map(move |i| {
+      (0..new_columns).into_par_iter().map(move |j| {
+        (0..shared_edge).map(|k| &lhs[(i, k)] * &rhs[(k, j)]).sum()
+      })
+    }).collect();
+
+    Matrix {
+      rows: new_rows,
+      columns: new_columns,
+      data,
+    }
+  }
+}
+
+fn verify(matrix: &Matrix<f32>) -> bool {
+  for i in 0..matrix.rows {
+    for j in 0..matrix.columns {
+      if matrix[(i, j)] != i as f32 * j as f32 {
         return false;
       }
     }
@@ -22,24 +99,17 @@ fn matrix_verification(matrix: &Vec<f32>, n: usize) -> bool {
   true
 }
 
-fn fill_matrices(mat_a : &mut Vec<f32>, mat_b: &mut Vec<f32>, n: usize) {
-  for i in 0..n {
-    for j in 0..n {
-      mat_a[i * n + j] = i as f32 * j as f32;            // some matrix - note: flattened indexing!
-      mat_b[i * n + j] = if i == j { 1.0 } else { 0.0 } // identity matrix
-    }
-  }
-}
-
 fn main() {
-  let n = 500;
-  let mut mat_a = vec![0.0; n * n];
-  let mut mat_b = vec![0.0; n * n];
+  let n = env::args().nth(1)
+    .map(|n| n.parse().expect("Failed to parse argument"))
+    .unwrap_or(1_000);
 
-  fill_matrices(&mut mat_a, &mut mat_b, n);
-  let mat_res = matrix_multiplication(mat_a, mat_b, n);
+  let mat_a = Matrix::<f32>::i_times_j(n, n);
+  let mat_b = Matrix::<f32>::identity(n);
 
-  if matrix_verification(&mat_res, n) == false {
+  let mat_res = &mat_a * &mat_b;
+
+  if verify(&mat_res) == false {
     panic!("verification failed");
   }
 }
