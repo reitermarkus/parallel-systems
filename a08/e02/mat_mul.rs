@@ -15,6 +15,13 @@ impl<T> Matrix<T> where T: Default + Clone {
   }
 }
 
+impl<T> Matrix<T> {
+  #[inline]
+  pub unsafe fn get_unchecked(&self, i: usize, j: usize) -> &T {
+    self.data.get_unchecked(i * self.rows + j)
+  }
+}
+
 impl Matrix<f32> {
   pub fn i_times_j(rows: usize, columns: usize) -> Self {
     let mut m = Self::new(rows, columns);
@@ -43,12 +50,16 @@ impl<T> Index<(usize, usize)> for Matrix<T> {
   type Output = T;
 
   fn index(&self, i: (usize, usize)) -> &Self::Output {
+    assert!(i.0 < self.rows);
+    assert!(i.1 < self.columns);
     &self.data[i.0 * self.rows + i.1]
   }
 }
 
 impl<T> IndexMut<(usize, usize)> for Matrix<T> {
   fn index_mut(&mut self, i: (usize, usize)) -> &mut Self::Output {
+    assert!(i.0 < self.rows);
+    assert!(i.1 < self.columns);
     &mut self.data[i.0 * self.rows + i.1]
   }
 }
@@ -75,7 +86,7 @@ where
 
     let data = (0..new_rows).into_par_iter().flat_map(move |i| {
       (0..new_columns).into_par_iter().map(move |j| {
-        (0..shared_edge).map(|k| &lhs[(i, k)] * &rhs[(k, j)]).sum()
+        (0..shared_edge).map(|k| unsafe { lhs.get_unchecked(i, k) * rhs.get_unchecked(k, j) }).sum()
       })
     }).collect();
 
