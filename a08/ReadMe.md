@@ -20,6 +20,9 @@
 ![](speedup-pi.svg)
 ![](efficiency-pi.svg)
 
+the main parallelization step in this case is to use a `omp parallel reduction` in order to safely reduce on the `inside` variable.
+The loop itself uses a conventional `omp for`.
+
 ### Heat Stencil
 
 | Problem Size (Room Size * Time Steps) | Threads | Runtime |
@@ -37,6 +40,8 @@
 
 ![](speedup-heat-stencil.svg)
 ![](efficiency-heat-stencil.svg)
+
+Since we did not see any benefit in collapsing loops or any other optimization strategy, we just went for an ordinary `omp for`. However a `omp single` is still needed to safely swap buffers and print intermediate steps, since the whole region is "parallel".
 
 ## Exercise 2
 
@@ -57,3 +62,6 @@
 
 ![](speedup-matrix-multiplication.svg)
 ![](efficiency-matrix-multiplication.svg)
+
+For the matrix multiplication we actually saw a benefit in collapsing loops and therefore we decided on collapsing the outer two loops with `omp for collapse(2)`. The other loops use a standard `omp for`.
+
