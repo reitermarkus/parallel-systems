@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
 
   auto time_steps = room_size * 100;
 
-  cout << "Computing heat-distribution for room size " << room_size << " for " << time_steps << " timestaps\n";
+  cout << "Computing heat-distribution for room size " << room_size << " for " << time_steps << " timesteps\n";
 
   // Create buffers for storing temperature fields and
   // initialize temperature to 0° C (273 K) everywhere.

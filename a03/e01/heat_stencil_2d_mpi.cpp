@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
   size_t time_steps = room_size * 500;
 
   if (rank == 0) {
-    cout << "Computing heat-distribution for room size " << room_size << " for " << time_steps << " timestaps\n";
+    cout << "Computing heat-distribution for room size " << room_size << " for " << time_steps << " timesteps\n";
   }
 
   for (size_t t = 0; t < time_steps; t++) {
