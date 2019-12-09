@@ -1,13 +1,8 @@
-#include "../shared/parse_ull.hpp"
 #include <vector>
 
-void print(const vector<size_t>& board, int queens) {
-  for (int i = 0; i < queens; i++) {
-    for (int j = 0; j < queens; j++)
-      cout << " " << board[i * queens + j] << " ";
-    cout << endl;
-  }
-}
+#include "../shared/parse_ull.hpp"
+
+#include "nqueens.hpp"
 
 bool check_vecinity(const vector<size_t>& board, int row, int col, int queens) {
   for (int i = 0; i < col; i++)
