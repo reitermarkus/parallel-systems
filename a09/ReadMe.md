@@ -2,9 +2,15 @@
 
 ## Exercise 1: N-Queens Problem
 
+### Implement a sequential version of the n-queens problem. Benchmark your program for several problem sizes. What can you observe?
+
 In the sequential version, we can observe that the runtime grows exponentially relative to a given problem size. We were only able to calculate problem sizes up to 17 in a reasonable amount of time.
 
-We optimized the function to check for collisions from three loops (horizontal, vertical, diagonal) to just a single loop over the queens which are already placed.
+### Parallelize your program using OpenMP. Which OpenMP constructs are suitable candidates and why?
+
+Our solution uses a conventional `omp parallel` for parallization and `omp atomic` for synchronization. More advanced constructs like `omp task` would not really be benefitial in our case.
+
+### Benchmark your problem for several problem sizes and numbers of threads. What can you observe?
 
 ![](speedup.svg)
 
@@ -51,6 +57,8 @@ We optimized the function to check for collisions from three loops (horizontal, 
 
 We can see that until problem size 10, the runtime is insignificant. After that point, parallelization becomes beneficial.
 
-### Possible Optimizations
+The scalability of our program is dependant on the problem size. Every thread is assigned to one row of the board. For this reason systems with high thread count do not benefit from their threads if the problem size is lower than the thread count. So we should make the units of computation smaller so that actually all threads are working, even if the problem size is smaller.
 
-One problem is that we never actually utilize 20 threads, so we should make the units of computation smaller so that actually all threads are working, even if the problem size is smaller.
+### What are potential optimizations for this application?
+
+We optimized the function to check for collisions from three loops (horizontal, vertical, diagonal) to just a single loop over the queens which are already placed.
