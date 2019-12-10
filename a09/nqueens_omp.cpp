@@ -29,10 +29,10 @@ struct Queen {
   }
 };
 
-bool solve(vector<size_t>& board, size_t queens) {
+size_t solve(size_t queens) {
   vector<Queen> global_placed_queens;
 
-  bool searching = true;
+  size_t solutions = 0;
 
   #pragma omp parallel
   {
@@ -41,7 +41,7 @@ bool solve(vector<size_t>& board, size_t queens) {
 
     auto current_queen = Queen(omp_get_thread_num(), 0);
 
-    while (searching && current_queen.row < queens && current_queen.column < queens) {
+    while (current_queen.row < queens && current_queen.column < queens) {
       if (current_queen.can_be_killed_by(placed_queens)) {
         current_queen.row++;
 
@@ -58,23 +58,33 @@ bool solve(vector<size_t>& board, size_t queens) {
           current_queen = previous_queen;
         }
       } else {
-        placed_queens.push_back(current_queen);
-        current_queen = Queen(0, current_queen.column + 1);
+        if (current_queen.column + 1 == queens) {
+          #pragma omp atomic
+          solutions++;
+
+          current_queen.row++;
+
+          while (current_queen.row == queens && current_queen.column > 0) {
+            Queen previous_queen = placed_queens.back();
+            placed_queens.pop_back();
+
+            if (previous_queen.column == 0) {
+              previous_queen.row += omp_get_num_threads();
+            } else {
+              previous_queen.row++;
+            }
+
+            current_queen = previous_queen;
+          }
+        } else {
+          placed_queens.push_back(current_queen);
+          current_queen = Queen(0, current_queen.column + 1);
+        }
       }
     }
-
-    #pragma omp critical
-    if (placed_queens.size() == queens) {
-      searching = false;
-      global_placed_queens = placed_queens;
-    }
   }
 
-  for (auto queen: global_placed_queens) {
-    board[queen.row * queens + queen.column] = 1;
-  }
-
-  return global_placed_queens.size() == queens;
+  return solutions;
 }
 
 int main(int argc, char **argv) {
@@ -86,14 +96,8 @@ int main(int argc, char **argv) {
 
   cout << "Solving " << queens << " Queens Problem …" << endl;
 
-  auto board = vector<size_t>(queens * queens, 0);
-
-  if (!solve(board, queens)) {
-    cout << "Solution does not exist" << endl;
-    return EXIT_FAILURE;
-  }
-
-  print(board, queens);
+  auto solutions = solve(queens);
+  cout << solutions << " solutions found." << endl;
 
   return EXIT_SUCCESS;
 }
