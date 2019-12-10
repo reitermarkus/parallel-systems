@@ -9,10 +9,7 @@ struct Queen {
   size_t row;
   size_t column;
 
-  Queen(size_t row, size_t column) {
-    this->row = row;
-    this->column = column;
-  }
+  Queen(size_t _row, size_t _column) : row(_row), column(_column) { }
 
   bool can_be_killed_by(const vector<Queen>& other_queens) {
     for (auto queen: other_queens) {
@@ -37,3 +34,4 @@ void print(const vector<size_t>& board, int queens) {
     cout << endl;
   }
 }
+
