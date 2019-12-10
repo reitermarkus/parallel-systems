@@ -1,6 +1,10 @@
 # Assignment 9
 
-## N-Queens Problem
+## Exercise 1: N-Queens Problem
+
+In the sequential version, we can observe that the runtime grows exponentially relative to a given problem size. We were only able to calculate problem sizes up to 17 in a reasonable amount of time.
+
+![](speedup.svg)
 
 | Problem Size | Threads | Runtime (µs) |
 |-------------:|--------:|-------------:|
@@ -42,3 +46,9 @@
 ![](speedup.svg)
 
 ![](efficiency.svg)
+
+We can see that until problem size 10, the runtime is insignificant. After that point, parallelization becomes beneficial.
+
+### Possible Optimizations
+
+One problem is that we never actually utilize 20 threads, so we should make the units of computation smaller so that actually all threads are working, even if the problem size is smaller.
