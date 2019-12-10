@@ -4,6 +4,8 @@
 
 In the sequential version, we can observe that the runtime grows exponentially relative to a given problem size. We were only able to calculate problem sizes up to 17 in a reasonable amount of time.
 
+We optimized the function to check for collisions from three loops (horizontal, vertical, diagonal) to just a single loop over the queens which are already placed.
+
 ![](speedup.svg)
 
 | Problem Size | Threads | Runtime (µs) |
