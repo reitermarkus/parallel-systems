@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../shared/heat_stencil.hpp"
+#include "heat_stencil.hpp"
 
 #include <iostream>
 #include <string>

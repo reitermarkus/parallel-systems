@@ -1,6 +1,6 @@
-#include "../../shared/parse_ull.hpp"
-#include "../../shared/boost.hpp"
-#include "../../shared/heat_stencil_2d.hpp"
+#include "../shared/parse_ull.hpp"
+#include "../shared/boost.hpp"
+#include "../shared/heat_stencil_2d.hpp"
 
 class column {
   vector<vector<float>>& matrix;
@@ -141,6 +141,7 @@ int main(int argc, char **argv) {
       cart_comm.recv(up_source, 4, buffer_a[0]);
     }
 
+    #pragma omp parallel for
     for (size_t i = 1; i < chunk_size + 1; i++) {
       for (size_t j = 1; j < chunk_size + 1; j++) {
         // The center stays constant (the heat is still on).

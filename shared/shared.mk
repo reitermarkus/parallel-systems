@@ -49,6 +49,12 @@ all: $(TARGETS)
 %_mpi: %_mpi.o
 	$(MPI_CXX) $^ $(LDFLAGS) $(MPI_LDFLAGS) -o $@
 
+%_mpi_omp.o: %_mpi_omp.cpp
+	$(MPI_CXX) $(CXXFLAGS) $(CPPFLAGS) $(MPI_CPPFLAGS) $(OPENMP_CPPFLAGS) -c -o $@ $^
+
+%_mpi_omp: %_mpi_omp.o
+	$(MPI_CXX) $^ $(LDFLAGS) $(MPI_LDFLAGS) $(OPENMP_LDFLAGS) -o $@
+
 %_omp.o: %_omp.cpp
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(OPENMP_CPPFLAGS) -c -o $@ $^
 
