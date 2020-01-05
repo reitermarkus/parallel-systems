@@ -182,11 +182,13 @@ int main(int argc, char **argv) {
       #else
       for (size_t j = 1; j < chunk_size + 1; j++) {
       #endif
+        #ifndef OPENMP_OPTIMIZATION
         // The center stays constant (the heat is still on).
         if (rank == source_rank && (i == chunk_source_y && j == chunk_source_x)) {
           buffer_b[i][j] = buffer_a[i][j];
           continue;
         }
+        #endif
 
         auto gi = global_row(rank, i);
         #ifdef MPI_OPTIMIZATION
@@ -222,6 +224,11 @@ int main(int argc, char **argv) {
         buffer_b[i][j] = temp_current + (1.0 / 5.0) * (temp_left + temp_right + temp_up + temp_down + (-4 * temp_current));
       }
     }
+
+    #ifdef OPENMP_OPTIMIZATION
+    // The center stays constant (the heat is still on).
+    buffer_b[chunk_source_y][chunk_source_x] = buffer_a[chunk_source_y][chunk_source_x];
+    #endif
 
     // Swap matrices (just pointers, not content).
     swap(buffer_a, buffer_b);

@@ -39,6 +39,10 @@ ifeq ($(MPI_OPTIMIZATION),1)
   CPPFLAGS += -DMPI_OPTIMIZATION
 endif
 
+ifeq ($(OPENMP_OPTIMIZATION),1)
+  CPPFLAGS += -DOPENMP_OPTIMIZATION
+endif
+
 TARGETS ?= $(sort $(patsubst %.cpp,%,$(wildcard *_omp.cpp *_seq.cpp *_mpi.cpp)))
 
 .PHONY: all
