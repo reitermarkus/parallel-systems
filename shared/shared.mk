@@ -36,11 +36,16 @@ ifeq ($(DEBUG),1)
 endif
 
 ifeq ($(MPI_OPTIMIZATION),1)
-  CPPFLAGS += -DMPI_OPTIMIZATION
+  CPPFLAGS += -DMPI_OPTIMIZATION=1
+else
+  CPPFLAGS += -DMPI_OPTIMIZATION=0
 endif
 
 ifeq ($(OPENMP_OPTIMIZATION),1)
-  CPPFLAGS += -DOPENMP_OPTIMIZATION
+  CPPFLAGS += -DOPENMP_OPTIMIZATION=1
+  CPPFLAGS += -march=native
+else
+  CPPFLAGS += -DOPENMP_OPTIMIZATION=0
 endif
 
 TARGETS ?= $(sort $(patsubst %.cpp,%,$(wildcard *_omp.cpp *_seq.cpp *_mpi.cpp)))

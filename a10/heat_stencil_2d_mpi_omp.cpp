@@ -24,6 +24,10 @@ class column {
 };
 
 int main(int argc, char **argv) {
+  #if OPENMP_OPTIMIZATION
+  const auto simd_len = 8;
+  #endif
+
   size_t room_size = 500;
 
   if (argc > 1) {
@@ -36,7 +40,7 @@ int main(int argc, char **argv) {
   size_t size = world.size();
   size_t rank = world.rank();
 
-  #ifdef MPI_OPTIMIZATION
+  #if MPI_OPTIMIZATION
   vector<mpi::cartesian_dimension> dimensions = {
     mpi::cartesian_dimension(size),
   };
@@ -65,15 +69,21 @@ int main(int argc, char **argv) {
   auto source_x = room_size / 4;
   auto source_y = room_size / 4;
 
-  #ifdef MPI_OPTIMIZATION
+  #if MPI_OPTIMIZATION
   auto chunk_size = (room_size + size - 1) / size;
 
   auto global_row = [&](size_t rank, size_t i) {
     return rank * chunk_size + i - 1;
   };
 
-  vector<vector<float>> buffer_a(chunk_size + 2, vector<float>(room_size, 273));
-  vector<vector<float>> buffer_b(chunk_size + 2, vector<float>(room_size));
+  #if OPENMP_OPTIMIZATION
+  auto room_size2 = ((room_size + simd_len - 1) / simd_len) * simd_len;
+  #else
+  auto room_size2 = room_size;
+  #endif
+
+  vector<vector<float>> buffer_a(chunk_size + 2, vector<float>(room_size2, 273));
+  vector<vector<float>> buffer_b(chunk_size + 2, vector<float>(room_size2));
   #else
   auto chunk_size = (room_size + dim - 1) / dim;
 
@@ -85,11 +95,17 @@ int main(int argc, char **argv) {
     return (rank / dim) * chunk_size + i - 1;
   };
 
-  vector<vector<float>> buffer_a(chunk_size + 2, vector<float>(chunk_size + 2, 273));
-  vector<vector<float>> buffer_b(chunk_size + 2, vector<float>(chunk_size + 2));
+  #if OPENMP_OPTIMIZATION
+  auto chunk_size2 = ((chunk_size + simd_len - 1) / simd_len) * simd_len;
+  #else
+  auto chunk_size2 = chunk_size;
   #endif
 
-  #ifdef MPI_OPTIMIZATION
+  vector<vector<float>> buffer_a(chunk_size + 2, vector<float>(chunk_size2 + 2, 273));
+  vector<vector<float>> buffer_b(chunk_size + 2, vector<float>(chunk_size2 + 2));
+  #endif
+
+  #if MPI_OPTIMIZATION
   vector<int> coordinates {
     static_cast<int>(source_y / chunk_size),
   };
@@ -104,7 +120,7 @@ int main(int argc, char **argv) {
 
   auto chunk_source_y = source_y % chunk_size + 1;
 
-  #ifdef MPI_OPTIMIZATION
+  #if MPI_OPTIMIZATION
   auto chunk_source_x = source_x;
   #else
   auto chunk_source_x = source_x % chunk_size + 1;
@@ -117,7 +133,7 @@ int main(int argc, char **argv) {
   auto [up_source, down_dest] = cart_comm.shifted_ranks(0, 1);
   auto [down_source, up_dest] = cart_comm.shifted_ranks(0, -1);
 
-  #ifndef MPI_OPTIMIZATION
+  #if (!MPI_OPTIMIZATION)
   auto [left_source, right_dest] = cart_comm.shifted_ranks(1, 1);
   auto [right_source, left_dest] = cart_comm.shifted_ranks(1, -1);
   #endif
@@ -139,7 +155,7 @@ int main(int argc, char **argv) {
       cart_comm.isend(down_dest, 4, buffer_a[chunk_size]);
     }
 
-    #ifndef MPI_OPTIMIZATION
+    #if (!MPI_OPTIMIZATION)
     // Send first column to left neighbor.
     if (left_dest >= 0) {
       column left_column(buffer_a, 1);
@@ -175,14 +191,75 @@ int main(int argc, char **argv) {
       cart_comm.recv(up_source, 4, buffer_a[0]);
     }
 
+
+    #if OPENMP_OPTIMIZATION
+    bool last_rank = rank == size;
+    auto max_row = last_rank ? room_size % chunk_size : chunk_size;
+
+    #pragma omp parallel for
+    for (size_t i = 1; i < max_row + 1; i++) {
+    #else
     #pragma omp parallel for
     for (size_t i = 1; i < chunk_size + 1; i++) {
-      #ifdef MPI_OPTIMIZATION
+    #endif
+      #if (MPI_OPTIMIZATION && OPENMP_OPTIMIZATION)
+      for (size_t j = 0; j < (room_size + (simd_len - 1)) / simd_len; j++) {
+        auto gi = global_row(rank, i);
+
+        #pragma omp simd simdlen(simd_len)
+        for (size_t x = 0; x < simd_len; x++) {
+          auto gj = j * simd_len + x;
+
+          float temp_current = buffer_a[i][gj];
+
+          bool first_column = gj == 0;
+          bool first_row = rank == 0 && i == 1;
+          bool last_column = gj == room_size - 1;
+          bool last_row = gi == room_size - 1;
+
+          // Get temperatures of adjacent cells.
+          float temp_left = first_column ? temp_current : buffer_a[i][gj - 1];
+          float temp_right = last_column ? temp_current : buffer_a[i][gj + 1];
+          float temp_up = first_row ? temp_current : buffer_a[i - 1][gj];
+          float temp_down = last_row ? temp_current : buffer_a[i + 1][gj];
+
+          buffer_b[i][gj] = temp_current + (1.0 / 5.0) * (temp_left + temp_right + temp_up + temp_down + (-4 * temp_current));
+        }
+      }
+      #elif OPENMP_OPTIMIZATION
+        for (size_t j = 1; j < chunk_size + 1; j += simd_len) {
+          auto gi = global_row(rank, i);
+
+          #pragma omp simd simdlen(simd_len)
+          for (size_t x = 0; x < simd_len; x++) {
+            auto lj = j + x;
+            auto gj = global_column(rank, lj);
+
+            float temp_current = buffer_a[i][lj];
+
+            bool first_column = rank % dim == 0 && lj == 1;
+            bool first_row = rank < dim && i == 1;
+            bool last_column = gj >= room_size - 1;
+            bool last_row = gi >= room_size - 1;
+
+            // Get temperatures of adjacent cells.
+            float temp_left = first_column ? temp_current : buffer_a[i][lj - 1];
+            float temp_right = last_column ? temp_current : buffer_a[i][lj + 1];
+            float temp_up = first_row ? temp_current : buffer_a[i - 1][lj];
+            float temp_down = last_row ? temp_current : buffer_a[i + 1][lj];
+
+            buffer_b[i][lj] = temp_current + (1.0 / 5.0) * (temp_left + temp_right + temp_up + temp_down + (-4 * temp_current));
+          }
+        }
+      #else
+      #if MPI_OPTIMIZATION
       for (size_t j = 0; j < room_size; j++) {
       #else
       for (size_t j = 1; j < chunk_size + 1; j++) {
       #endif
-        #ifndef OPENMP_OPTIMIZATION
+        auto gi = global_row(rank, i);
+
+        #if (!OPENMP_OPTIMIZATION)
         // The center stays constant (the heat is still on).
         if (rank == source_rank && (i == chunk_source_y && j == chunk_source_x)) {
           buffer_b[i][j] = buffer_a[i][j];
@@ -190,21 +267,20 @@ int main(int argc, char **argv) {
         }
         #endif
 
-        auto gi = global_row(rank, i);
-        #ifdef MPI_OPTIMIZATION
+        #if (MPI_OPTIMIZATION || OPENMP_OPTIMIZATION)
         auto gj = j;
         #else
         auto gj = global_column(rank, j);
-        #endif
 
         if (gi >= room_size || gj >= room_size) {
           continue;
         }
+        #endif
 
         // Get temperature at current position.
         float temp_current = buffer_a[i][j];
 
-        #ifdef MPI_OPTIMIZATION
+        #if MPI_OPTIMIZATION
         bool first_column = j == 0;
         bool first_row = rank == 0 && i == 1;
         #else
@@ -223,9 +299,10 @@ int main(int argc, char **argv) {
         // Compute new temperature at current position.
         buffer_b[i][j] = temp_current + (1.0 / 5.0) * (temp_left + temp_right + temp_up + temp_down + (-4 * temp_current));
       }
+      #endif
     }
 
-    #ifdef OPENMP_OPTIMIZATION
+    #if OPENMP_OPTIMIZATION
     // The center stays constant (the heat is still on).
     buffer_b[chunk_source_y][chunk_source_x] = buffer_a[chunk_source_y][chunk_source_x];
     #endif
@@ -253,13 +330,13 @@ int main(int argc, char **argv) {
       }
 
       for (size_t i = 1; i < chunk_size + 2; i++) {
-        #ifdef MPI_OPTIMIZATION
+        #if MPI_OPTIMIZATION
         for (size_t j = 0; j < room_size; j++) {
         #else
         for (size_t j = 1; j < chunk_size + 2; j++) {
         #endif
           auto gi = global_row(r, i);
-          #ifdef MPI_OPTIMIZATION
+          #if MPI_OPTIMIZATION
           auto gj = j;
           #else
           auto gj = global_column(r, j);
