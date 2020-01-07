@@ -30,6 +30,8 @@ For the OpenMP optimization, we used the `simd` pragma. We split the inner loop 
 | 1                | 0                   | 400          |        11149 |
 | 1                | 1                   | 400          |         9971 |
 
+![](1node_8threads.svg)
+
 # 2 Nodes / 8 Threads
 
 | MPI Optimization | OpenMP Optimization | Problem Size | Runtime (ms) |
@@ -43,3 +45,4 @@ For the OpenMP optimization, we used the `simd` pragma. We split the inner loop 
 | 1                | 0                   | 400          |        16611 |
 | 1                | 1                   | 400          |        15893 |
 
+![](2nodes_8threads.svg)
