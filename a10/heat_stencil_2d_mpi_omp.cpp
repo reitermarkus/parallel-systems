@@ -325,7 +325,11 @@ int main(int argc, char **argv) {
         world.recv(r, 5, buffer_a_flat);
 
         for (size_t i = 0; i < chunk_size + 2; i++) {
-          buffer_a[i] = vector<float>(&buffer_a_flat[i * (chunk_size + 2)], &buffer_a_flat[(i + 1) * (chunk_size + 2)]);
+          #if MPI_OPTIMIZATION
+          buffer_a[i] = vector<float>(&buffer_a_flat[i * room_size2], &buffer_a_flat[(i + 1) * room_size2]);
+          #else
+          buffer_a[i] = vector<float>(&buffer_a_flat[i * (chunk_size2 + 2)], &buffer_a_flat[(i + 1) * (chunk_size2 + 2)]);
+          #endif
         }
       }
 
