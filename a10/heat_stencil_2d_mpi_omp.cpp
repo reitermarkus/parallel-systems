@@ -138,7 +138,7 @@ int main(int argc, char **argv) {
   auto [right_source, left_dest] = cart_comm.shifted_ranks(1, -1);
   #endif
 
-  size_t time_steps = room_size * 500;
+  size_t time_steps = 100000;
 
   if (rank == 0) {
     cout << "Computing heat-distribution for room size " << room_size << " for " << time_steps << " timesteps\n";

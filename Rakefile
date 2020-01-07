@@ -74,6 +74,20 @@ def ompexec(executable, threads: nil, env:)
   SH
 end
 
+def mpi_ompexec(executable, slots: nil, threads: nil, env:)
+  slots ||= '"${NSLOTS}"'
+
+  <<~SH
+    #!/usr/bin/env bash
+    set -eou pipefail
+
+    #{load_env env}
+    #{threads ? "export OMP_NUM_THREADS='#{threads}'" : ''}
+
+    time mpiexec --display-map --display-allocation --map-by node -n #{slots} --mca btl self,vader,tcp #{executable.shellescape} "${@}"
+  SH
+end
+
 def qsub(executable, *args, mpi_environment: nil, parallel_environment:, slots:, output_file: nil, error_log: nil, name: nil, sync: true, directory: nil)
   id = SecureRandom.hex
   current_output_file = "output-#{id}.log"
