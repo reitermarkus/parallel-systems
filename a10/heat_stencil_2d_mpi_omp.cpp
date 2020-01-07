@@ -304,7 +304,9 @@ int main(int argc, char **argv) {
 
     #if OPENMP_OPTIMIZATION
     // The center stays constant (the heat is still on).
-    buffer_b[chunk_source_y][chunk_source_x] = buffer_a[chunk_source_y][chunk_source_x];
+    if (rank == source_rank) {
+      buffer_b[chunk_source_y][chunk_source_x] = buffer_a[chunk_source_y][chunk_source_x];
+    }
     #endif
 
     // Swap matrices (just pointers, not content).
