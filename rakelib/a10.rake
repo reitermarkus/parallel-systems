@@ -19,8 +19,8 @@ task :a10, [:mpi_optimization, :openmp_optimization, :problem_size] => :sync do 
 end
 
 task :a10_bench => :sync do
-  (0...3).each { |n|
-    [200, 400].each{ |ps|
+  [1, 2, 3, 4, 8].each { |n|
+    [200, 400, 800].each{ |ps|
       [[0, 0], [0, 1], [1, 0], [1, 1]].each { |(mpi, omp)|
         ssh <<~SH, directory: 'a10'
           #{load_env :cpp}
@@ -30,7 +30,7 @@ task :a10_bench => :sync do
 
         qsub mpi_ompexec('./heat_stencil_2d_mpi_omp', threads: 8, env: :cpp), ps.to_s,
             parallel_environment: 'openmpi-1perhost',
-            slots: 2 ** n,
+            slots: n,
             output_file: "output_#{n}_#{ps}_#{mpi}_#{omp}.log",
             error_log: "error_#{n}_#{ps}_#{mpi}_#{omp}.log",
             name: 'heat_stencil_2d_mpi_omp',
