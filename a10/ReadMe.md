@@ -2,22 +2,15 @@
 
 ## Exercise 1
 
-| Optimization | Runtime |
-|--------------|---------|
-| None         | 8.357 s |
-| Only OpenMP  | 1.990 s |
-| Only MPI     | 2.400 s |
-| MPI & OpenMP | 1.765 s |
-
-# MPI Optimization
+### MPI Optimization
 
 For the MPI optimization, we changed our topology from 2D to 1D. Before the optimization, we split the rows and columns into equal chunks. Now we are splitting only the rows into slabs.
 
-# OpenMP Optimization
+### OpenMP Optimization
 
 For the OpenMP optimization, we used the `simd` pragma. We split the inner loop of the calculation into two loops in which the inner loop is vectorized. Additionally, we skipped the check for the heat source inside of the loop and instead reset the heat source after the loop.
 
-# 1 Node / 8 Threads
+### 1 Node / 8 Threads
 
 | MPI Optimization | OpenMP Optimization | Problem Size | Runtime (ms) |
 |------------------|---------------------|--------------|--------------|
@@ -36,7 +29,7 @@ For the OpenMP optimization, we used the `simd` pragma. We split the inner loop 
 
 ![](1node_8threads.svg)
 
-# 2 Nodes / 8 Threads
+### 2 Nodes / 8 Threads
 
 | MPI Optimization | OpenMP Optimization | Problem Size | Runtime (ms) |
 |------------------|---------------------|--------------|--------------|
@@ -55,7 +48,7 @@ For the OpenMP optimization, we used the `simd` pragma. We split the inner loop 
 
 ![](2nodes_8threads.svg)
 
-# 3 Nodes / 8 Threads
+### 3 Nodes / 8 Threads
 
 | MPI Optimization | OpenMP Optimization | Problem Size | Runtime (ms) |
 |------------------|---------------------|--------------|--------------|
@@ -74,7 +67,7 @@ For the OpenMP optimization, we used the `simd` pragma. We split the inner loop 
 
 ![](3nodes_8threads.svg)
 
-# 4 Nodes / 8 Threads
+### 4 Nodes / 8 Threads
 
 | MPI Optimization | OpenMP Optimization | Problem Size | Runtime (ms) |
 |------------------|---------------------|--------------|--------------|
@@ -93,7 +86,7 @@ For the OpenMP optimization, we used the `simd` pragma. We split the inner loop 
 
 ![](4nodes_8threads.svg)
 
-# 8 Nodes / 8 Threads
+### 8 Nodes / 8 Threads
 
 | MPI Optimization | OpenMP Optimization | Problem Size | Runtime (ms) |
 |------------------|---------------------|--------------|--------------|
