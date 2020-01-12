@@ -1,3 +1,5 @@
+#include "print_results.h"
+
 #include <stdio.h>
 #include <math.h>
 
@@ -11,7 +13,7 @@
 #include "type.h"
 
 void print_results(char class, int n1, int n2, int n3, int niter,
-    double t, double mops, char *optype, logical verified, char *npbversion)
+    double t, double mops, char *optype, bool verified, char *npbversion)
 {
   printf( "\n\n Benchmark Completed.\n");
   printf( " Class           =             %12c\n", class );

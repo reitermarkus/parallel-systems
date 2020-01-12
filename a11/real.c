@@ -1,4 +1,4 @@
-
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -7,7 +7,6 @@
 #include "randdp.h"
 #include "timers.h"
 #include "print_results.h"
-
 
 static void setup(int *n1, int *n2, int *n3);
 static void mg3P(double u[], double v[], double r[],
@@ -64,7 +63,7 @@ int main()
   double rnm2, rnmu, old2, oldu, epsilon;
   int n1, n2, n3, nit;
   double nn, verify_value, err;
-  logical verified;
+  bool verified;
 
   int i;
   char *t_names[T_last];
