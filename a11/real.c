@@ -3,6 +3,13 @@
 #include <stdlib.h>
 #include <math.h>
 
+#ifdef _OPENMP
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#include <omp.h>
+#pragma GCC diagnostic pop
+#endif
+
 #include "globals.h"
 #include "randdp.h"
 #include "timers.h"
@@ -908,7 +915,7 @@ static void zran3(void *oz, int n1, int n2, int n3, int nx1, int ny1)
   int jg[4][mm][2];
 
   double rdummy;
-  int myid, num_threads;
+  int myid;
 
   a1 = power(a, nx1);
   a2 = power(a, nx1*ny1);
@@ -986,21 +993,19 @@ static void zran3(void *oz, int n1, int n2, int n3, int nx1, int ny1)
   i1 = mm - 1;
   i0 = mm - 1;
   myid = 0;
-  num_threads = 1;
-  for (i = mm - 1; i >= 0; i--) {
 
+  for (i = mm - 1; i >= 0; i--) {
     best1 = 0.0;
     best0 = 1.0;
 
-    for (i2 = 1; i2 <= num_threads; i2++) {
-      if (ten[i1][1] > best1) {
-        best1 = ten[i1][1];
-        jg[0][i][1] = myid;
-      }
-      if (ten[i0][0] < best0) {
-        best0 = ten[i0][0];
-        jg[0][i][0] = myid;
-      }
+    if (ten[i1][1] > best1) {
+      best1 = ten[i1][1];
+      jg[0][i][1] = myid;
+    }
+
+    if (ten[i0][0] < best0) {
+      best0 = ten[i0][0];
+      jg[0][i][0] = myid;
     }
 
     if (myid == jg[0][i][1]) {

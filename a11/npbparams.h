@@ -2,7 +2,7 @@
 /*
    This file is generated automatically by the setparams utility.
    It sets the number of processors and the class of the NPB
-   in this directory. Do not modify it by hand.   
+   in this directory. Do not modify it by hand.
 */
 #define NX_DEFAULT     256
 #define NY_DEFAULT     256
