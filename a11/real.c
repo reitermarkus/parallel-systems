@@ -24,8 +24,8 @@ static void norm2u3(void *or, int n1, int n2, int n3,
                     double *rnm2, double *rnmu,
                     int nx, int ny, int nz);
 static void rep_nrm(void *u, int n1, int n2, int n3, char *title, int kk);
-static void comm3(void *ou, int n1, int n2, int n3, int kk);
-static void zran3(void *oz, int n1, int n2, int n3, int nx1, int ny1, int k);
+static void comm3(void *ou, int n1, int n2, int n3);
+static void zran3(void *oz, int n1, int n2, int n3, int nx1, int ny1);
 static void showall(void *oz, int n1, int n2, int n3);
 static double power(double a, int n);
 static void bubble(double ten[][2], int j1[][2], int j2[][2], int j3[][2],
@@ -183,7 +183,7 @@ int main()
 
   setup(&n1, &n2, &n3);
   zero3(u, n1, n2, n3);
-  zran3(v, n1, n2, n3, nx[lt], ny[lt], k);
+  zran3(v, n1, n2, n3, nx[lt], ny[lt]);
 
   norm2u3(v, n1, n2, n3, &rnm2, &rnmu, nx[lt], ny[lt], nz[lt]);
   //  printf("\n");
@@ -207,7 +207,7 @@ int main()
   resid(u, v, r, n1, n2, n3, a, k);
   setup(&n1, &n2, &n3);
   zero3(u, n1, n2, n3);
-  zran3(v, n1, n2, n3, nx[lt], ny[lt], k);
+  zran3(v, n1, n2, n3, nx[lt], ny[lt]);
 
   timer_stop(T_init);
   tinit = timer_read(T_init);
@@ -298,8 +298,7 @@ int main()
   print_results(Class, nx[lt], ny[lt], nz[lt],
                 nit, t,
                 mflops, "          floating point",
-                verified, NPBVERSION, COMPILETIME,
-                CS1, CS2, CS3, CS4, CS5, CS6, CS7);
+                verified, NPBVERSION);
 
   //---------------------------------------------------------------------
   // More timers
@@ -482,7 +481,7 @@ static void psinv(void *or, void *ou, int n1, int n2, int n3,
   //---------------------------------------------------------------------
   // exchange boundary points
   //---------------------------------------------------------------------
-  comm3(u, n1, n2, n3, k);
+  comm3(u, n1, n2, n3);
 
   if (debug_vec[0] >= 1) {
     rep_nrm(u, n1, n2, n3, "   psinv", k);
@@ -544,7 +543,7 @@ static void resid(void *ou, void *ov, void *or, int n1, int n2, int n3,
   //---------------------------------------------------------------------
   // exchange boundary data
   //---------------------------------------------------------------------
-  comm3(r, n1, n2, n3, k);
+  comm3(r, n1, n2, n3);
 
   if (debug_vec[0] >= 1) {
     rep_nrm(r, n1, n2, n3, "   resid", k);
@@ -624,7 +623,7 @@ static void rprj3(void *or, int m1k, int m2k, int m3k,
   if (timeron) timer_stop(T_rprj3);
 
   j = k-1;
-  comm3(s, m1j, m2j, m3j, j);
+  comm3(s, m1j, m2j, m3j);
 
   if (debug_vec[0] >= 1) {
     rep_nrm(s, m1j, m2j, m3j, "   rprj3", k-1);
@@ -856,7 +855,7 @@ static void rep_nrm(void *u, int n1, int n2, int n3, char *title, int kk)
 //---------------------------------------------------------------------
 // comm3 organizes the communication on all borders
 //---------------------------------------------------------------------
-static void comm3(void *ou, int n1, int n2, int n3, int kk)
+static void comm3(void *ou, int n1, int n2, int n3)
 {
   double (*u)[n2][n1] = (double (*)[n2][n1])ou;
 
@@ -893,7 +892,7 @@ static void comm3(void *ou, int n1, int n2, int n3, int kk)
 // loads -1 at a different ten random points,
 // and zero elsewhere.
 //---------------------------------------------------------------------
-static void zran3(void *oz, int n1, int n2, int n3, int nx1, int ny1, int k)
+static void zran3(void *oz, int n1, int n2, int n3, int nx1, int ny1)
 {
   double (*z)[n2][n1] = (double (*)[n2][n1])oz;
 
@@ -1083,7 +1082,7 @@ static void zran3(void *oz, int n1, int n2, int n3, int nx1, int ny1, int k)
   for (i = mm-1; i >= mm1; i--) {
     z[jg[3][i][1]][jg[2][i][1]][jg[1][i][1]] = +1.0;
   }
-  comm3(z, n1, n2, n3, k);
+  comm3(z, n1, n2, n3);
 
   //---------------------------------------------------------------------
   // showall(z,n1,n2,n3);

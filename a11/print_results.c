@@ -1,17 +1,18 @@
 #include <stdio.h>
 #include <math.h>
 
+#ifdef _OPENMP
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#include <omp.h>
+#pragma GCC diagnostic pop
+#endif
+
 #include "type.h"
 
-
 void print_results(char class, int n1, int n2, int n3, int niter,
-    double t, double mops, char *optype, logical verified, char *npbversion,
-    char *compiletime, char *cs1, char *cs2, char *cs3, char *cs4, char *cs5,
-    char *cs6, char *cs7)
+    double t, double mops, char *optype, logical verified, char *npbversion)
 {
-  char size[16];
-  int j;
-
   printf( "\n\n Benchmark Completed.\n");
   printf( " Class           =             %12c\n", class );
 
@@ -27,16 +28,20 @@ void print_results(char class, int n1, int n2, int n3, int niter,
   }
 
   printf( " Iterations      =             %12d\n", niter );
- // printf( " Time in seconds =             %12.2lf\n", t );
+  printf( " Time in seconds =             %12.2lf\n", t );
 
-  //printf( " Mop/s total     =          %15.2lf\n", mops );
-  //printf( " Mop/s/thread    =          %15.2lf\n", mops/(double)num_threads );
+  printf( " Mop/s total     =          %15.2lf\n", mops );
+
+  #ifdef _OPENMP
+  #pragma omp parallel
+  {
+    #pragma omp single
+    printf( " Mop/s/thread    =          %15.2lf\n", mops/(double)omp_get_num_threads() );
+  }
+  #endif
 
   printf( " Operation type  = %24s\n", optype );
-  if ( verified )
-    printf( " Verification    =             %12s\n", "SUCCESSFUL" );
-  else
-    printf( " Verification    =             %12s\n", "UNSUCCESSFUL" );
+  printf( " Verification    =             %12s\n", verified ? "SUCCESSFUL" : "UNSUCCESSFUL");
   printf( " Version         =             %12s\n", npbversion );
 }
 

@@ -1,20 +1,21 @@
-CC=gcc
-CC_FLAGS=-O3 -g3 -lm
+TARGETS = real_seq real_omp
 
-.PHONEY: all
-all: real
+include ../shared/shared.mk
 
-SRC=$(wildcard *.c)
+CFLAGS += -g3
+LDFLAGS += -lm
 
-real: $(SRC)
-	@$(CC) $(CC_FLAGS) $(SRC) -o real
+SRCS = $(wildcard *.c)
+OBJS = $(patsubst %.c,%.o,$(SRCS))
 
-.PHONEY: clean
-clean:
-	@rm real
+%_seq.o: %.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $^ -o $@
 
-.PHONEY: run
-run: all
-	@echo "Sequential:"
-	@./real
-	@echo
+real_seq: $(patsubst %.o,%_seq.o,$(OBJS))
+	$(CC) $^ $(LDFLAGS) -o $@
+
+%_omp.o: %.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPENMP_CPPFLAGS) -c $^ -o $@
+
+real_omp: $(patsubst %.o,%_omp.o,$(OBJS))
+	$(CC) $^ $(LDFLAGS) $(OPENMP_LDFLAGS) -o $@

@@ -1,4 +1,4 @@
-/* C/Fortran interface is different on different machines. 
+/* C/Fortran interface is different on different machines.
  * You may need to tweak this.
  */
 
@@ -9,3 +9,5 @@
 #else
 #define wtime wtime_
 #endif
+
+void wtime(double*);

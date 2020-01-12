@@ -1,12 +1,12 @@
 #include "wtime.h"
 #include <stdlib.h>
+
 #ifdef _OPENMP
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #include <omp.h>
+#pragma GCC diagnostic pop
 #endif
-
-/*  Prototype  */
-void wtime( double * );
-
 
 /*****************************************************************/
 /******         E  L  A  P  S  E  D  _  T  I  M  E          ******/
