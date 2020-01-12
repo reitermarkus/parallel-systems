@@ -2,7 +2,7 @@ MPI_CXX ?= mpic++
 
 CPPFLAGS ?= -O3 -Wall -Wextra -pedantic
 CXXFLAGS ?= -std=c++17
-CFLAGS ?= -std=c18
+CFLAGS ?= -std=c11
 
 ifneq ($(OS), Windows_NT)
   OS ?= $(shell uname -s)
