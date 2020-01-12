@@ -88,7 +88,7 @@ def mpi_ompexec(executable, slots: nil, threads: nil, env:)
   SH
 end
 
-def qsub(executable, *args, mpi_environment: nil, parallel_environment:, slots:, output_file: nil, error_log: nil, name: nil, sync: true, directory: nil)
+def qsub(executable, *args, parallel_environment:, slots:, output_file: nil, error_log: nil, name: nil, sync: true, directory: nil)
   id = SecureRandom.hex
   current_output_file = "output-#{id}.log"
   current_error_log = "error-#{id}.log"
@@ -100,11 +100,13 @@ def qsub(executable, *args, mpi_environment: nil, parallel_environment:, slots:,
   qsub_args << '-pe' << parallel_environment << slots
   qsub_args << '-N' << name if name
   qsub_args << '-sync' << 'yes' if sync
+  qsub_args << '--' unless args.empty?
 
-  if executable.start_with?('#!')
-    qsub_args << '--' unless args.empty?
-  else
-    qsub_args << executable
+  unless executable.start_with?('#!')
+    executable = <<~SH
+      #!/usr/bin/env bash
+      exec #{executable.shellescape}
+    SH
   end
 
   qsub_args += args
