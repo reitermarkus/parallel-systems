@@ -105,7 +105,7 @@ def qsub(executable, *args, parallel_environment:, slots:, output_file: nil, err
   unless executable.start_with?('#!')
     executable = <<~SH
       #!/usr/bin/env bash
-      exec #{executable.shellescape}
+      time #{executable.shellescape}
     SH
   end
 
