@@ -455,24 +455,26 @@ static void psinv(void *or, void *ou, int n1, int n2, int n3,
   double (*r)[n2][n1] = (double (*)[n2][n1])or;
   double (*u)[n2][n1] = (double (*)[n2][n1])ou;
 
-  #pragma omp parallel
-  {
-    int i3, i2, i1;
+  if (timeron) timer_start(T_psinv);
 
+  #ifdef _OPENMP
+  #pragma omp parallel
+  #endif
+  {
     double r1[M], r2[M];
 
-    if (timeron) timer_start(T_psinv);
-
+    #ifdef _OPENMP
     #pragma omp for
-    for (i3 = 1; i3 < n3-1; i3++) {
-      for (i2 = 1; i2 < n2-1; i2++) {
-        for (i1 = 0; i1 < n1; i1++) {
+    #endif
+    for (int i3 = 1; i3 < n3-1; i3++) {
+      for (int i2 = 1; i2 < n2-1; i2++) {
+        for (int i1 = 0; i1 < n1; i1++) {
           r1[i1] = r[i3][i2-1][i1] + r[i3][i2+1][i1]
                 + r[i3-1][i2][i1] + r[i3+1][i2][i1];
           r2[i1] = r[i3-1][i2-1][i1] + r[i3-1][i2+1][i1]
                 + r[i3+1][i2-1][i1] + r[i3+1][i2+1][i1];
         }
-        for (i1 = 1; i1 < n1-1; i1++) {
+        for (int i1 = 1; i1 < n1-1; i1++) {
           u[i3][i2][i1] = u[i3][i2][i1]
                         + c[0] * r[i3][i2][i1]
                         + c[1] * ( r[i3][i2][i1-1] + r[i3][i2][i1+1]
@@ -524,14 +526,18 @@ static void resid(void *ou, void *ov, void *or, int n1, int n2, int n3,
   double (*v)[n2][n1] = (double (*)[n2][n1])ov;
   double (*r)[n2][n1] = (double (*)[n2][n1])or;
 
+  #ifdef _OPENMP
   #pragma omp parallel
+  #endif
   {
     int i3, i2, i1;
     double u1[M], u2[M];
 
     if (timeron) timer_start(T_resid);
 
+    #ifdef _OPENMP
     #pragma omp for collapse(2)
+    #endif
     for (i3 = 1; i3 < n3-1; i3++) {
       for (i2 = 1; i2 < n2-1; i2++) {
         for (i1 = 0; i1 < n1; i1++) {
@@ -588,13 +594,16 @@ static void rprj3(void *or, int m1k, int m2k, int m3k,
   double (*r)[m2k][m1k] = (double (*)[m2k][m1k])or;
   double (*s)[m2j][m1j] = (double (*)[m2j][m1j])os;
 
+  if (timeron) timer_start(T_rprj3);
+
+  #ifdef _OPENMP
   #pragma omp parallel
+  #endif
   {
-    int j3, j2, j1, i3, i2, i1, d1, d2, d3, j;
+    int d1, d2, d3;
 
     double x1[M], y1[M], x2, y2;
 
-    if (timeron) timer_start(T_rprj3);
     if (m1k == 3) {
       d1 = 2;
     } else {
@@ -613,22 +622,24 @@ static void rprj3(void *or, int m1k, int m2k, int m3k,
       d3 = 1;
     }
 
+    #ifdef _OPENMP
     #pragma omp for
-    for (j3 = 1; j3 < m3j-1; j3++) {
-      i3 = 2*j3-d3;
-      for (j2 = 1; j2 < m2j-1; j2++) {
-        i2 = 2*j2-d2;
+    #endif
+    for (int j3 = 1; j3 < m3j-1; j3++) {
+      for (int j2 = 1; j2 < m2j-1; j2++) {
+        int i3 = 2*j3-d3;
+        int i2 = 2*j2-d2;
 
-        for (j1 = 1; j1 < m1j; j1++) {
-          i1 = 2*j1-d1;
+        for (int j1 = 1; j1 < m1j; j1++) {
+          int i1 = 2*j1-d1;
           x1[i1] = r[i3+1][i2  ][i1] + r[i3+1][i2+2][i1]
                 + r[i3  ][i2+1][i1] + r[i3+2][i2+1][i1];
           y1[i1] = r[i3  ][i2  ][i1] + r[i3+2][i2  ][i1]
                 + r[i3  ][i2+2][i1] + r[i3+2][i2+2][i1];
         }
 
-        for (j1 = 1; j1 < m1j-1; j1++) {
-          i1 = 2*j1-d1;
+        for (int j1 = 1; j1 < m1j-1; j1++) {
+          int i1 = 2*j1-d1;
           y2 = r[i3  ][i2  ][i1+1] + r[i3+2][i2  ][i1+1]
             + r[i3  ][i2+2][i1+1] + r[i3+2][i2+2][i1+1];
           x2 = r[i3+1][i2  ][i1+1] + r[i3+1][i2+2][i1+1]
@@ -641,8 +652,6 @@ static void rprj3(void *or, int m1k, int m2k, int m3k,
         }
       }
     }
-
-    j = k - 1;
   }
 
   if (timeron) timer_stop(T_rprj3);
@@ -1168,17 +1177,14 @@ static double power(double a, int n)
 static void bubble(double ten[][2], int j1[][2], int j2[][2], int j3[][2],
                    int m, int ind)
 {
-  double temp;
-  int i, j_temp;
-
   if (ind == 1) {
-    for (i = 0; i < m-1; i++) {
+    for (int i = 0; i < m-1; i++) {
       if (ten[i][ind] > ten[i+1][ind]) {
-        temp = ten[i+1][ind];
+        double temp = ten[i+1][ind];
         ten[i+1][ind] = ten[i][ind];
         ten[i][ind] = temp;
 
-        j_temp = j1[i+1][ind];
+        int j_temp = j1[i+1][ind];
         j1[i+1][ind] = j1[i][ind];
         j1[i][ind] = j_temp;
 
@@ -1194,14 +1200,13 @@ static void bubble(double ten[][2], int j1[][2], int j2[][2], int j3[][2],
       }
     }
   } else {
-    for (i = 0; i < m-1; i++) {
+    for (int i = 0; i < m-1; i++) {
       if (ten[i][ind] < ten[i+1][ind]) {
-
-        temp = ten[i+1][ind];
+        double temp = ten[i+1][ind];
         ten[i+1][ind] = ten[i][ind];
         ten[i][ind] = temp;
 
-        j_temp = j1[i+1][ind];
+        int j_temp = j1[i+1][ind];
         j1[i+1][ind] = j1[i][ind];
         j1[i][ind] = j_temp;
 
@@ -1224,14 +1229,12 @@ static void zero3(void *oz, int n1, int n2, int n3)
 {
   double (*z)[n2][n1] = (double (*)[n2][n1])oz;
 
-  int i1, i2, i3;
-
   #ifdef _OPENMP
   #pragma omp parallel for
   #endif
-  for (i3 = 0; i3 < n3; i3++) {
-    for (i2 = 0; i2 < n2; i2++) {
-      for (i1 = 0; i1 < n1; i1++) {
+  for (int i3 = 0; i3 < n3; i3++) {
+    for (int i2 = 0; i2 < n2; i2++) {
+      for (int i1 = 0; i1 < n1; i1++) {
         z[i3][i2][i1] = 0.0;
       }
     }
