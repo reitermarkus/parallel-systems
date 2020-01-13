@@ -2,7 +2,7 @@ task :sync => :'lcc2:ping' do
   sync 'a11'
 end
 
-task :a11 => :sync do
+task :a11_bench => :sync do
   ssh <<~SH, directory: 'a11'
     #{load_env :cpp}
     make clean
@@ -22,4 +22,18 @@ task :a11 => :sync do
         name: 'real_omp',
         directory: 'a11'
   }
+end
+
+task :a11, [:n] => :sync do |n:|
+  ssh <<~SH, directory: 'a11'
+    #{load_env :cpp}
+    make clean
+    make -j
+  SH
+
+  qsub ompexec('./real_omp', threads: n, env: :cpp), nil,
+      parallel_environment: 'openmp',
+      slots: n,
+      name: 'real_omp',
+      directory: 'a11'
 end
