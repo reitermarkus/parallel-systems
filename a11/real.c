@@ -922,40 +922,37 @@ static void zran3(void *oz, int n1, int n2, int n3, int nx1, int ny1)
 {
   double (*z)[n2][n1] = (double (*)[n2][n1])oz;
 
-  int i0, mm0, mm1;
-
-  int i1, i2, i3, d1, e1, e2, e3;
-  double xx, x0, x1, a1, a2, ai;
+  int d1, e1, e2, e3;
+  double a1, a2, ai;
 
   const int mm = 10;
   const double a = pow(5.0, 13.0);
   const double x = 314159265.0;
-  double ten[mm][2], best0, best1;
-  int i, j1[mm][2], j2[mm][2], j3[mm][2];
+  double ten[mm][2];
+  int j1[mm][2], j2[mm][2], j3[mm][2];
   int jg[4][mm][2];
 
   double rdummy;
-  int myid;
 
   a1 = power(a, nx1);
   a2 = power(a, nx1*ny1);
 
   zero3(z, n1, n2, n3);
 
-  i = is1-2+nx1*(is2-2+ny1*(is3-2));
+  int p = is1-2+nx1*(is2-2+ny1*(is3-2));
 
-  ai = power(a, i);
+  ai = power(a, p);
   d1 = ie1 - is1 + 1;
   e1 = ie1 - is1 + 2;
   e2 = ie2 - is2 + 2;
   e3 = ie3 - is3 + 2;
-  x0 = x;
+  double x0 = x;
   rdummy = randlc(&x0, ai);
 
   //---------------------------------------------------------------------
   // save the starting seeds for the following loop
   //---------------------------------------------------------------------
-  for (i3 = 1; i3 < e3; i3++) {
+  for (int i3 = 1; i3 < e3; i3++) {
     starts[i3] = x0;
     rdummy = randlc(&x0, a2);
   }
@@ -963,10 +960,13 @@ static void zran3(void *oz, int n1, int n2, int n3, int nx1, int ny1)
   //---------------------------------------------------------------------
   // fill array
   //---------------------------------------------------------------------
-  for (i3 = 1; i3 < e3; i3++) {
-    x1 = starts[i3];
-    for (i2 = 1; i2 < e2; i2++) {
-      xx = x1;
+  #ifdef _OPENMP
+  #pragma omp parallel for
+  #endif
+  for (int i3 = 1; i3 < e3; i3++) {
+    double x1 = starts[i3];
+    for (int i2 = 1; i2 < e2; i2++) {
+      double xx = x1;
       vranlc(d1, &xx, a, &(z[i3][i2][1]));
       rdummy = randlc(&x1, a1);
     }
@@ -977,7 +977,10 @@ static void zran3(void *oz, int n1, int n2, int n3, int nx1, int ny1)
   // showall(z,n1,n2,n3);
   //---------------------------------------------------------------------
 
-  for (i = 0; i < mm; i++) {
+  #ifdef _OPENMP
+  #pragma omp parallel for
+  #endif
+  for (int i = 0; i < mm; i++) {
     ten[i][1] = 0.0;
     j1[i][1] = 0;
     j2[i][1] = 0;
@@ -988,10 +991,14 @@ static void zran3(void *oz, int n1, int n2, int n3, int nx1, int ny1)
     j3[i][0] = 0;
   }
 
-  for (i3 = 1; i3 < n3-1; i3++) {
+  #ifdef _OPENMP
+  #pragma omp parallel for
+  #endif
+  for (int i3 = 1; i3 < n3-1; i3++) {
     double (*zi3)[n1] = z[i3];
-    for (i2 = 1; i2 < n2-1; i2++) {
-      for (i1 = 1; i1 < n1-1; i1++) {
+
+    for (int i2 = 1; i2 < n2-1; i2++) {
+      for (int i1 = 1; i1 < n1-1; i1++) {
         if (zi3[i2][i1] > ten[0][1]) {
           ten[0][1] = zi3[i2][i1];
           j1[0][1] = i1;
@@ -1010,32 +1017,26 @@ static void zran3(void *oz, int n1, int n2, int n3, int nx1, int ny1)
     }
   }
 
-  i1 = mm - 1;
-  i0 = mm - 1;
-  myid = 0;
+  int i1 = mm - 1;
+  int i0 = mm - 1;
 
-  for (i = mm - 1; i >= 0; i--) {
-    best1 = 0.0;
-    best0 = 1.0;
-
-    if (ten[i1][1] > best1) {
-      best1 = ten[i1][1];
-      jg[0][i][1] = myid;
+  for (int i = mm - 1; i >= 0; i--) {
+    if (ten[i1][1] > 0.0) {
+      jg[0][i][1] = 0;
     }
 
-    if (ten[i0][0] < best0) {
-      best0 = ten[i0][0];
-      jg[0][i][0] = myid;
+    if (ten[i0][0] < 1.0) {
+      jg[0][i][0] = 0;
     }
 
-    if (myid == jg[0][i][1]) {
+    if (jg[0][i][1] == 0) {
       jg[1][i][1] = j1[i1][1];
       jg[2][i][1] = j2[i1][1];
       jg[3][i][1] = j3[i1][1];
       i1 = i1-1;
     }
 
-    if (myid == jg[0][i][0]) {
+    if (jg[0][i][0] == 0) {
       jg[1][i][0] = j1[i0][0];
       jg[2][i][0] = j2[i0][0];
       jg[3][i][0] = j3[i0][0];
@@ -1045,65 +1046,74 @@ static void zran3(void *oz, int n1, int n2, int n3, int nx1, int ny1)
 
   //  mm1 = i1+1;
   //  mm0 = i0+1;
-  mm1 = 0;
-  mm0 = 0;
+  int mm1 = 0;
+  int mm0 = 0;
 
   /*
   int cnt = 0;
   printf("  \n");
   printf("  negative charges at\n");
-  for (i = 0; i < mm; i++) {
+  for (int i = 0; i < mm; i++) {
     printf(" (%3d,%3d,%3d)", jg[1][i][0], jg[2][i][0], jg[3][i][0]);
     if (++cnt % 5 == 0) printf("\n");
   }
 
   cnt = 0;
   printf("  positive charges at\n");
-  for (i = 0; i < mm; i++) {
+  for (int i = 0; i < mm; i++) {
     printf(" (%3d,%3d,%3d)", jg[1][i][1], jg[2][i][1], jg[3][i][1]);
     if (++cnt % 5 == 0) printf("\n");
   }
 
   cnt = 0;
   printf("  small random numbers were\n");
-  for (i = mm-1; i >= 0; i--) {
+  for (int i = mm-1; i >= 0; i--) {
     printf(" %15.8E", ten[i][0]);
     if (++cnt % 5 == 0) printf("\n");
   }
 
   cnt = 0;
   printf("  and they were found on processor number\n");
-  for (i = mm-1; i >= 0; i--) {
+  for (int i = mm-1; i >= 0; i--) {
     printf(" %4d", jg[0][i][0]);
     if (++cnt % 10 == 0) printf("\n");
   }
 
   cnt = 0;
   printf("  large random numbers were\n");
-  for (i = mm-1; i >= 0; i--) {
+  for (int i = mm-1; i >= 0; i--) {
     printf(" %15.8E", ten[i][1]);
     if (++cnt % 5 == 0) printf("\n");
   }
 
   cnt = 0;
   printf("  and they were found on processor number\n");
-  for (i = mm-1; i >= 0; i--) {
+  for (int i = mm-1; i >= 0; i--) {
     printf(" %4d", jg[0][i][1]);
     if (++cnt % 10 == 0) printf("\n");
   }
   */
 
-  for (i3 = 0; i3 < n3; i3++) {
-    for (i2 = 0; i2 < n2; i2++) {
-      for (i1 = 0; i1 < n1; i1++) {
+  #ifdef _OPENMP
+  #pragma omp parallel for
+  #endif
+  for (int i3 = 0; i3 < n3; i3++) {
+    for (int i2 = 0; i2 < n2; i2++) {
+      for (int i1 = 0; i1 < n1; i1++) {
         z[i3][i2][i1] = 0.0;
       }
     }
   }
-  for (i = mm-1; i >= mm0; i--) {
+  #ifdef _OPENMP
+  #pragma omp parallel for
+  #endif
+  for (int i = mm-1; i >= mm0; i--) {
     z[jg[3][i][0]][jg[2][i][0]][jg[1][i][0]] = -1.0;
   }
-  for (i = mm-1; i >= mm1; i--) {
+  #ifdef _OPENMP
+  #pragma omp parallel for
+  #endif
+  for (int i = mm-1; i >= mm1; i--) {
     z[jg[3][i][1]][jg[2][i][1]][jg[1][i][1]] = +1.0;
   }
   comm3(z, n1, n2, n3);
