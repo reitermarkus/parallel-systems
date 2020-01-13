@@ -600,27 +600,11 @@ static void rprj3(void *or, int m1k, int m2k, int m3k,
   #pragma omp parallel
   #endif
   {
-    int d1, d2, d3;
-
     double x1[M], y1[M], x2, y2;
 
-    if (m1k == 3) {
-      d1 = 2;
-    } else {
-      d1 = 1;
-    }
-
-    if (m2k == 3) {
-      d2 = 2;
-    } else {
-      d2 = 1;
-    }
-
-    if (m3k == 3) {
-      d3 = 2;
-    } else {
-      d3 = 1;
-    }
+    int d1 = m1k == 3 ? 2 : 1;
+    int d2 = m2k == 3 ? 2 : 1;
+    int d3 = m3k == 3 ? 2 : 1;
 
     #ifdef _OPENMP
     #pragma omp for
