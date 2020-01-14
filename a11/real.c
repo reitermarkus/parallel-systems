@@ -530,23 +530,21 @@ static void resid(void *ou, void *ov, void *or, int n1, int n2, int n3,
   #pragma omp parallel
   #endif
   {
-    int i3, i2, i1;
-    double u1[M], u2[M];
-
     if (timeron) timer_start(T_resid);
 
     #ifdef _OPENMP
     #pragma omp for collapse(2)
     #endif
-    for (i3 = 1; i3 < n3-1; i3++) {
-      for (i2 = 1; i2 < n2-1; i2++) {
-        for (i1 = 0; i1 < n1; i1++) {
-          u1[i1] = u[i3][i2-1][i1] + u[i3][i2+1][i1]
-                + u[i3-1][i2][i1] + u[i3+1][i2][i1];
-          u2[i1] = u[i3-1][i2-1][i1] + u[i3-1][i2+1][i1]
-                + u[i3+1][i2-1][i1] + u[i3+1][i2+1][i1];
+    for (int i3 = 1; i3 < n3-1; i3++) {
+      for (int i2 = 1; i2 < n2-1; i2++) {
+        double u1[M], u2[M];
+
+        for (int i1 = 0; i1 < n1; i1++) {
+          u1[i1] = u[i3][i2-1][i1] + u[i3][i2+1][i1] + u[i3-1][i2][i1] + u[i3+1][i2][i1];
+          u2[i1] = u[i3-1][i2-1][i1] + u[i3-1][i2+1][i1] + u[i3+1][i2-1][i1] + u[i3+1][i2+1][i1];
         }
-        for (i1 = 1; i1 < n1-1; i1++) {
+
+        for (int i1 = 1; i1 < n1-1; i1++) {
           r[i3][i2][i1] = v[i3][i2][i1]
                         - a[0] * u[i3][i2][i1]
           //-------------------------------------------------------------------
@@ -695,28 +693,20 @@ static void interp(void *oz, int mm1, int mm2, int mm3,
           }
 
           for (int i1 = 0; i1 < mm1-1; i1++) {
-            u[2*i3][2*i2][2*i1] = u[2*i3][2*i2][2*i1]
-                                + z[i3][i2][i1];
-            u[2*i3][2*i2][2*i1+1] = u[2*i3][2*i2][2*i1+1]
-                                  + 0.5 * (z[i3][i2][i1+1] + z[i3][i2][i1]);
+            u[2*i3][2*i2][2*i1] += z[i3][i2][i1];
+            u[2*i3][2*i2][2*i1+1] += 0.5 * (z[i3][i2][i1+1] + z[i3][i2][i1]);
           }
           for (int i1 = 0; i1 < mm1-1; i1++) {
-            u[2*i3][2*i2+1][2*i1] = u[2*i3][2*i2+1][2*i1]
-                                  + 0.5 * z1[i1];
-            u[2*i3][2*i2+1][2*i1+1] = u[2*i3][2*i2+1][2*i1+1]
-                                    + 0.25 * (z1[i1] + z1[i1+1]);
+            u[2*i3][2*i2+1][2*i1] += 0.5 * z1[i1];
+            u[2*i3][2*i2+1][2*i1+1] += 0.25 * (z1[i1] + z1[i1+1]);
           }
           for (int i1 = 0; i1 < mm1-1; i1++) {
-            u[2*i3+1][2*i2][2*i1] = u[2*i3+1][2*i2][2*i1]
-                                    + 0.5 * z2[i1];
-            u[2*i3+1][2*i2][2*i1+1] = u[2*i3+1][2*i2][2*i1+1]
-                                    + 0.25 * (z2[i1] + z2[i1+1]);
+            u[2*i3+1][2*i2][2*i1] += 0.5 * z2[i1];
+            u[2*i3+1][2*i2][2*i1+1] += 0.25 * (z2[i1] + z2[i1+1]);
           }
           for (int i1 = 0; i1 < mm1-1; i1++) {
-            u[2*i3+1][2*i2+1][2*i1] = u[2*i3+1][2*i2+1][2*i1]
-                                    + 0.25 * z3[i1];
-            u[2*i3+1][2*i2+1][2*i1+1] = u[2*i3+1][2*i2+1][2*i1+1]
-                                      + 0.125 * (z3[i1] + z3[i1+1]);
+            u[2*i3+1][2*i2+1][2*i1] += 0.25 * z3[i1];
+            u[2*i3+1][2*i2+1][2*i1+1] += 0.125 * (z3[i1] + z3[i1+1]);
           }
         }
       }
@@ -1017,16 +1007,12 @@ static void zran3(void *oz, int n1, int n2, int n3, int nx1, int ny1)
     }
   }
 
-  int i1 = mm - 1;
   int i0 = mm - 1;
+  int i1 = mm - 1;
 
   for (int i = mm - 1; i >= 0; i--) {
     if (ten[i1][1] > 0.0) {
       jg[0][i][1] = 0;
-    }
-
-    if (ten[i0][0] < 1.0) {
-      jg[0][i][0] = 0;
     }
 
     if (jg[0][i][1] == 0) {
@@ -1034,6 +1020,10 @@ static void zran3(void *oz, int n1, int n2, int n3, int nx1, int ny1)
       jg[2][i][1] = j2[i1][1];
       jg[3][i][1] = j3[i1][1];
       i1 = i1-1;
+    }
+
+    if (ten[i0][0] < 1.0) {
+      jg[0][i][0] = 0;
     }
 
     if (jg[0][i][0] == 0) {
