@@ -99,6 +99,7 @@ def qsub(executable, *args, parallel_environment:, slots:, output_file: nil, err
   qsub_args << '-e' << current_error_log
   qsub_args << '-pe' << parallel_environment << slots
   qsub_args << '-N' << name if name
+  qsub_args << '-l' << 'exclusive'
   qsub_args << '-sync' << 'yes' if sync
   qsub_args << '--' unless args.empty?
 
