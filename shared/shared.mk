@@ -44,10 +44,11 @@ endif
 
 ifeq ($(OPENMP_OPTIMIZATION),1)
   CPPFLAGS += -DOPENMP_OPTIMIZATION=1
-  CPPFLAGS += -march=native
 else
   CPPFLAGS += -DOPENMP_OPTIMIZATION=0
 endif
+
+CPPFLAGS += -march=native -mtune=native
 
 TARGETS ?= $(sort $(patsubst %.cpp,%,$(wildcard *_omp.cpp *_seq.cpp *_mpi.cpp)))
 
