@@ -10,7 +10,7 @@ task :a11_bench => :sync do
   SH
 
   qsub './real_seq',
-        parallel_environment: 'openmpi-1perhost',
+        parallel_environment: 'openmp',
         slots: 1,
         name: 'real',
         directory: 'a11'
