@@ -3,7 +3,7 @@ all: pi mat_mul
 OPENBLAS_PREFIX = $(shell brew --prefix openblas)
 
 %: %.chpl
-	chpl -I$(OPENBLAS_PREFIX)/include -L$(OPENBLAS_PREFIX)/lib -lblas $^
+	chpl --fast --local -I$(OPENBLAS_PREFIX)/include -L$(OPENBLAS_PREFIX)/lib -lblas $^
 
 .PHONY: clean
 clean:
