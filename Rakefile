@@ -40,6 +40,17 @@ def load_env(env = nil)
   when :chapel
     <<~SH
       eval $(~/.linuxbrew/bin/brew shellenv)
+      export CHPL_HOME="$(brew --prefix chapel)/libexec"
+
+      source "$CHPL_HOME/util/quickstart/setchplenv.bash"
+
+      export CHPL_TARGET_CPU=native
+      export CHPL_COMM=gasnet
+      export CHPL_COMM_SUBSTRATE=mpi
+
+      ln -sfn '../LICENSE' "${CHPL_HOME}/LICENSE"
+      ln -sfn '../COPYRIGHT' "${CHPL_HOME}/COPYRIGHT"
+      make -C "${CHPL_HOME}"
     SH
   end
 end
@@ -57,7 +68,6 @@ def mpiexec(executable, env:, n: nil)
 end
 
 def ompexec(executable, threads: nil, env:)
-
   <<~SH
     #!/usr/bin/env bash
     set -eou pipefail

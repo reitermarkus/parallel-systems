@@ -2,8 +2,14 @@ all: pi mat_mul
 
 OPENBLAS_PREFIX = $(shell brew --prefix openblas)
 
+CHPL_FLAGS = --fast --vectorize
+
+ifneq ($(CHPL_COMM),gasnet)
+	CHPL_FLAGS += --local
+endif
+
 %: %.chpl
-	chpl --fast --local -I$(OPENBLAS_PREFIX)/include -L$(OPENBLAS_PREFIX)/lib -lblas $^
+	chpl $(CHPL_FLAGS) -I$(OPENBLAS_PREFIX)/include -L$(OPENBLAS_PREFIX)/lib $^
 
 .PHONY: clean
 clean:
