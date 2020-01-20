@@ -16,7 +16,7 @@ task :a11_bench => :sync do
         directory: 'a11'
 
   [1, 2, 4, 8].each { |n|
-    qsub ompexec('./real_omp', threads: n, env: :cpp), nil,
+    qsub ompexec('./real_omp', threads: n, env: :cpp),
         parallel_environment: 'openmp',
         slots: n,
         name: 'real_omp',
@@ -31,7 +31,7 @@ task :a11, [:n] => :sync do |n:|
     make -j
   SH
 
-  qsub ompexec('./real_omp', threads: n, env: :cpp), nil,
+  qsub ompexec('./real_omp', threads: n, env: :cpp),
       parallel_environment: 'openmp',
       slots: n,
       name: 'real_omp',

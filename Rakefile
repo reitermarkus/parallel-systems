@@ -29,23 +29,17 @@ def load_env(env = nil)
   case env
   when :rust
     <<~SH
-      load_homebrew() {
-        shopt -q -o nounset
-        local nounset=$?
-
-        set +u
-        eval $(~/.linuxbrew/bin/brew shellenv)
-        [[ $nounset -eq 0 ]] && set -u
-      }
-
-      load_homebrew
-
+      eval $(~/.linuxbrew/bin/brew shellenv)
       source ~/.cargo/env
     SH
   when :cpp
     <<~SH
       module load gcc/8.2.0
       module load openmpi/4.0.1
+    SH
+  when :chapel
+    <<~SH
+      eval $(~/.linuxbrew/bin/brew shellenv)
     SH
   end
 end
@@ -70,6 +64,18 @@ def ompexec(executable, threads: nil, env:)
 
     #{load_env env}
     #{threads ? "export OMP_NUM_THREADS='#{threads}'" : ''}
+    time #{executable.shellescape} "${@}"
+  SH
+end
+
+def chplexec(executable, threads:)
+  <<~SH
+    #!/usr/bin/env bash
+    set -eou pipefail
+
+    #{load_env :chapel}
+    export CHPL_RT_NUM_THREADS_PER_LOCALE=MAX_LOGICAL
+    export OMP_NUM_THREADS=#{threads}
     time #{executable.shellescape} "${@}"
   SH
 end
