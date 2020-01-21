@@ -1,7 +1,5 @@
 all: pi mat_mul
 
-OPENBLAS_PREFIX = $(shell brew --prefix openblas)
-
 CHPL_FLAGS = --fast --vectorize
 
 ifneq ($(CHPL_COMM),gasnet)
@@ -9,7 +7,7 @@ ifneq ($(CHPL_COMM),gasnet)
 endif
 
 %: %.chpl
-	chpl $(CHPL_FLAGS) -I$(OPENBLAS_PREFIX)/include -L$(OPENBLAS_PREFIX)/lib $^
+	chpl $(CHPL_FLAGS) $^
 
 .PHONY: clean
 clean:
