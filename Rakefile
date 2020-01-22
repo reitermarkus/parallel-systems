@@ -37,19 +37,34 @@ def load_env(env = nil)
       module load gcc/8.2.0
       module load openmpi/4.0.1
     SH
-  when :chapel
-    <<~SH
-      eval $(~/.linuxbrew/bin/brew shellenv)
-      export CHPL_HOME="$(brew --prefix chapel)/libexec"
+  when :chapel, :chapel_mpi
+    s = <<~SH
+      module load gcc/8.2.0
+      module load openmpi/4.0.1
 
-      source "$CHPL_HOME/util/quickstart/setchplenv.bash"
+      export CHPL_HOME="${HOME}/scratch/chapel"
+    SH
 
+    if env == :chapel_mpi
+      s += <<~SH
+        source "$CHPL_HOME/util/quickstart/setchplenv.bash"
+
+        export CHPL_COMM=gasnet
+        export CHPL_COMM_SUBSTRATE=mpi
+        export OMPI_MCA_btl='self,vader,tcp'
+      SH
+    else
+      s += <<~SH
+        source "$CHPL_HOME/util/quickstart/setchplenv.bash"
+
+      SH
+    end
+
+    s += <<~SH
+      export CHPL_RT_NUM_THREADS_PER_LOCALE=MAX_LOGICAL
       export CHPL_TARGET_CPU=native
-      export CHPL_COMM=gasnet
-      export CHPL_COMM_SUBSTRATE=mpi
+      export CHPL_MEM=jemalloc
 
-      ln -sfn '../LICENSE' "${CHPL_HOME}/LICENSE"
-      ln -sfn '../COPYRIGHT' "${CHPL_HOME}/COPYRIGHT"
       make -C "${CHPL_HOME}"
     SH
   end
@@ -78,13 +93,12 @@ def ompexec(executable, threads: nil, env:)
   SH
 end
 
-def chplexec(executable, threads:)
+def chplexec(executable, threads:, env:)
   <<~SH
     #!/usr/bin/env bash
     set -eou pipefail
 
-    #{load_env :chapel}
-    export CHPL_RT_NUM_THREADS_PER_LOCALE=MAX_LOGICAL
+    #{load_env env}
     export OMP_NUM_THREADS=#{threads}
     time #{executable.shellescape} "${@}"
   SH
@@ -104,7 +118,7 @@ def mpi_ompexec(executable, slots: nil, threads: nil, env:)
   SH
 end
 
-def qsub(executable, *args, parallel_environment:, slots:, output_file: nil, error_log: nil, name: nil, sync: true, directory: nil)
+def qsub(executable, *args, parallel_environment:, slots:, output_file: nil, error_log: nil, name: nil, sync: true, directory: nil, runtime: nil)
   id = SecureRandom.hex
   current_output_file = "output-#{id}.log"
   current_error_log = "error-#{id}.log"

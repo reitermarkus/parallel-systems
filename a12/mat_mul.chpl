@@ -15,21 +15,23 @@ matB = transpose(matB);
 const chunkSize = size / numLocales;
 
 coforall loc in Locales {
-  var chunkStart = chunkSize * loc.id;
-  var chunkEnd = chunkStart + chunkSize;
+  on loc {
+    var chunkStart = chunkSize * loc.id;
+    var chunkEnd = chunkStart + chunkSize;
 
-  const threadChunkSize = chunkSize / threads;
+    const threadChunkSize = chunkSize / threads;
 
-  coforall t in 0..#threads {
-    var start = threadChunkSize * t;
-    var end = start + threadChunkSize;
-    start += 1;
-    if end > size then end = size;
+    coforall t in 0..#threads {
+      var start = threadChunkSize * t;
+      var end = start + threadChunkSize;
+      start += 1;
+      if end > size then end = size;
 
-    for i in start..end do
-      for j in 1..size  do
-        for k in vectorizeOnly(1..size) do
-          matRes[i, j] += matA[i, k] * matB[j, k];
+      for i in start..end do
+        for j in 1..size  do
+          for k in vectorizeOnly(1..size) do
+            matRes[i, j] += matA[i, k] * matB[j, k];
+    }
   }
 }
 
